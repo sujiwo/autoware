@@ -1,0 +1,36 @@
+# For Mapping using Oxford dataset
+dataset /media/sujiwo/ssd/oxford/map/2014-06-26-09-24-58 /home/sujiwo/Sources/robotcar-dataset-sdk/models/
+map /media/sujiwo/ssd/oxford/map/2014-06-26-09-24-58/vmml.map
+dataset /media/sujiwo/ssd/oxford/map/2014-06-23-15-36-04 /home/sujiwo/Sources/robotcar-dataset-sdk/models
+zoom 0.5
+detect 89.38
+
+# For building Meidai Dataset
+dataset /media/sujiwo/ssd/log_2016-12-26-13-21-10.bag
+velodyne /home/sujiwo/Autoware/ros/src/computing/perception/localization/packages/vmml/params/64e-S2.yaml
+pcdmap /home/sujiwo/Data/NagoyaUniversityMap/bin_meidai_ndmap.pcd
+# Small scale
+build 317.22 486.53
+# Surround campus
+build 317.22 932.16
+# Motoyama
+build 1907.96 2053.06
+
+
+# Mapping in meidai
+dataset /media/sujiwo/ssd/log_2016-12-26-13-21-10.bag
+zoom 0.33333333
+# Ask whole map
+map_create
+# Ask a subset (surrounding campus)
+map_create 315.49 932.16
+
+# Relocalization test
+dataset /media/sujiwo/ssd/log_2016-12-26-13-21-10.bag
+map /media/sujiwo/ssd/sample-mapping.bag.map
+detect 933.51
+
+# Fringe cases
+detect 932.16
+detect 3148.25
+detect /home/sujiwo/Autoware/ros/src/computing/perception/localization/packages/vmml/test/places/test-2.png
