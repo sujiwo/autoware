@@ -31,7 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
 	gnss
 	
 	# Test offline NDT localization
-	ndt_tku
+#	ndt_tku
 	pcl_omp_registration
 	velodyne_pointcloud
 )
@@ -118,9 +118,9 @@ add_library(
 #		src/datasets/CustomDataset.cpp
 		src/datasets/MeidaiBagDataset.cpp
 		src/datasets/MeidaiLocalizerGNSS.cpp
-		src/datasets/MeidaiLocalizerNDT.cpp
+#		src/datasets/MeidaiLocalizerNDT.cpp
 		src/datasets/LidarScanBag.cpp
-		src/datasets/NdtLocalizer.cpp
+#		src/datasets/NdtLocalizer.cpp
 		src/datasets/PclNdtLocalizer.cpp
 )
 
