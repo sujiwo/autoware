@@ -27,7 +27,7 @@ public:
 
 	void loadMap (const std::string &filename);
 
-	void putEstimation (const Pose &pEst);
+	void putEstimation (const Pose &pEst, const ptime &estTime);
 
 	Pose localize (const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &scan, ptime curTime);
 

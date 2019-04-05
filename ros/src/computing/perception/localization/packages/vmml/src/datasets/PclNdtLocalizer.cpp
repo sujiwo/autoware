@@ -41,10 +41,11 @@ PclNdtLocalizer::loadMap (const std::string &filename)
 }
 
 
-void PclNdtLocalizer::putEstimation(const Pose &est)
+void PclNdtLocalizer::putEstimation(const Pose &est, const ptime &estTime)
 {
 	prev_pose = est;
 	prev_pose2 = prev_pose;
+	lastLocalizationTime = estTime;
 }
 
 
@@ -54,11 +55,13 @@ PclNdtLocalizer::localize(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &curren
 	pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
 	mNdt.setInputSource(currentScan);
 
-	// Calculate offset
-	Pose npose_offset = prev_pose2.inverse() * prev_pose;
+	// Calculate velocity and estimation
+	Vector3d linear_velocity = prev_pose.position() - prev_pose2.position();
+	Pose moveEstimate = prev_pose;
 
-	// Calculate estimation
-	Pose moveEstimate = prev_pose * npose_offset;
+	if (linear_velocity.norm() >= 1e-3) {
+		moveEstimate.translation() += linear_velocity;
+	}
 
 	// Registration
 	mNdt.align(*output_cloud, moveEstimate.matrix().cast<float>());
@@ -97,7 +100,7 @@ createTrajectoryFromPclNdt
 		}
 
 		if (ip==0) {
-			lidarLocalizer.putEstimation(gnssPose);
+			lidarLocalizer.putEstimation(gnssPose, scanTime);
 		}
 
 		cNdtPose = lidarLocalizer.localize(cscan, scanTime);
