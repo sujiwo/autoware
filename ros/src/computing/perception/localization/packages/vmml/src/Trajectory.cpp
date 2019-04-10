@@ -211,6 +211,38 @@ Trajectory::subset(const ptime &start, const ptime &stop) const
 }
 
 
+Vector3d
+Trajectory::getLinearVelocityAt (const int idx) const
+{
+	assert(idx<this->size());
+	if (idx==0)
+		return Vector3d::Zero();
+
+	auto pos_k = at(idx),
+		pos_k1 = at(idx-1);
+
+	Vector3d vk = (pos_k.position() - pos_k1.position()) / toSeconds(pos_k.timestamp - pos_k1.timestamp);
+	return vk;
+}
+
+
+Vector3d
+Trajectory::getAngularVelocityAt (const int idx) const
+{
+	assert(idx<this->size());
+	if (idx==0)
+		return Vector3d::Zero();
+
+	auto pos_k = at(idx),
+		pos_k1 = at(idx-1);
+
+	auto rpy_k = quaternionToRPY(pos_k.orientation()),
+		rpy_k1 = quaternionToRPY(pos_k1.orientation());
+
+	// XXX: Unfinished!
+}
+
+
 bool
 Trajectory::dump(const std::string &filename) const
 {

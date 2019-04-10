@@ -103,6 +103,12 @@ public:
 
 	bool dump(const std::string &filename) const;
 
+	/*
+	 * Estimate velocities
+	 */
+	Vector3d getLinearVelocityAt (const int idx) const;
+	Vector3d getAngularVelocityAt (const int idx) const;
+
 private:
 	uint32_t
 	find_lower_bound(const ptime&) const;
