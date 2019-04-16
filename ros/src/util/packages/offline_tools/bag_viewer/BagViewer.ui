@@ -18,18 +18,9 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="RatioLayoutedFrame" name="imageFrame">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
+       <widget class="ImageRatioEqualViewer" name="imagePlace">
+        <property name="text">
+         <string>TextLabel</string>
         </property>
        </widget>
       </item>
@@ -74,7 +65,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>23</height>
+     <height>35</height>
     </rect>
    </property>
   </widget>
@@ -82,10 +73,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>RatioLayoutedFrame</class>
-   <extends>QFrame</extends>
-   <header>ratio_layouted_frame.h</header>
-   <container>1</container>
+   <class>ImageRatioEqualViewer</class>
+   <extends>QLabel</extends>
+   <header location="global">ImageRatioEqualViewer.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -180,7 +180,8 @@ void BagViewer::updateImage(int n) {
 
   QImage curImage(currentImage.data, currentImage.cols, currentImage.rows,
                   currentImage.step[0], QImage::Format_RGB888);
-  ui->imageFrame->setImage(curImage);
+  ui->imagePlace->setImage(curImage);
+//   ui->imageFrame->setImage(curImage);
   updateTimeOffsetIndicator();
 }
 
