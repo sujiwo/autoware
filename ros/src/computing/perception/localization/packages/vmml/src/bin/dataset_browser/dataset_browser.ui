@@ -25,21 +25,9 @@
      <item>
       <layout class="QHBoxLayout" name="viewerAndLidarControls">
        <item>
-        <widget class="RatioLayoutedFrame" name="frame">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="mouseTracking">
-          <bool>true</bool>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Raised</enum>
+        <widget class="ImageRatioEqualViewer" name="frame">
+         <property name="text">
+          <string>TextLabel</string>
          </property>
         </widget>
        </item>
@@ -267,10 +255,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>RatioLayoutedFrame</class>
-   <extends>QFrame</extends>
-   <header>ratio_layouted_frame.h</header>
-   <container>1</container>
+   <class>ImageRatioEqualViewer</class>
+   <extends>QLabel</extends>
+   <header>bag_viewer/ImageRatioEqualViewer.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

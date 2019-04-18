@@ -82,6 +82,9 @@ include_directories(
 	${Boost_INCLUDE_DIRS}
 	${G2O_INCLUDE_DIR}	
 	${LIBEDIT_INCLUDE_DIRS}
+	
+	# Special treatment to include ImageRatioEqualViewer.h
+	${offline_tools_SOURCE_PREFIX}
 )
 
 
@@ -129,10 +132,10 @@ add_library(
 add_executable(dataset_browser
 	src/bin/dataset_browser/main.cpp
 	src/bin/dataset_browser/DatasetBrowser.cpp	
-	src/bin/dataset_browser/ratio_layouted_frame.cpp
 	src/bin/dataset_browser/dataset_browser.ui
-# this header must be included in order to be processed by MOC & UIC
-	src/bin/dataset_browser/ratio_layouted_frame.h
+# Headers of a derived QWidget must be included in order to be processed by MOC & UIC
+	${offline_tools_SOURCE_PREFIX}/bag_viewer/ImageRatioEqualViewer.cpp
+	${offline_tools_SOURCE_PREFIX}/bag_viewer/ImageRatioEqualViewer.h
 )
 
 target_include_directories(dataset_browser

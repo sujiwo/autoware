@@ -16,7 +16,7 @@
 #include "MTContainers.h"
 
 #include "ui_dataset_browser.h"
-#include "ratio_layouted_frame.h"
+#include "bag_viewer/ImageRatioEqualViewer.h"
 
 #include "BaseFrame.h"
 #include "datasets/GenericDataset.h"
@@ -67,7 +67,7 @@ private:
 	CameraPinholeParams datasetCameraParam;
 
 	QSlider *timelineSlider;
-	RatioLayoutedFrame *frame;
+	ImageRatioEqualViewer *frame;
 	QLabel *timeOffsetLabel;
 	QPushButton *saveImageButton;
 	QCheckBox *enableLidarScanRender;
