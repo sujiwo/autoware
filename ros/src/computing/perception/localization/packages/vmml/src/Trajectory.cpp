@@ -252,7 +252,13 @@ Trajectory::dump(const std::string &filename) const
 	}
 
 	for (int i=0; i<size(); ++i) {
-		dsTrFd << at(i).dump() << endl;
+		// Timestamp, position and orientation
+		dsTrFd << at(i).dump() << ' ';
+		// Linear Velocity
+		auto vl = getLinearVelocityAt(i);
+		dsTrFd << dumpVector(vl);
+
+		dsTrFd << endl;
 	}
 
 	dsTrFd.close();
