@@ -78,7 +78,26 @@ struct PoseStamped : public Pose
 };
 
 
+/*
+ * Encodes velocity in free space, broken into linear and angular parts
+ */
+struct Twist
+{
+	// Zero
+	Twist() :
+		linear(Eigen::Vector3d::Zero()),
+		angular(Eigen::Vector3d::Zero())
+	{}
 
+	// calculate twist from two poses
+	Twist(const PoseStamped &p1, const PoseStamped &p2);
+
+	TTransform displacement(const tduration &td) const;
+	PoseStamped extrapolate(const tduration &td) const;
+
+	Eigen::Vector3d linear, angular;
+	PoseStamped anchor;
+};
 
 
 class Trajectory : public std::vector<PoseStamped>
@@ -106,8 +125,7 @@ public:
 	/*
 	 * Estimate velocities
 	 */
-	Vector3d getLinearVelocityAt (const int idx) const;
-	Vector3d getAngularVelocityAt (const int idx) const;
+	const Twist getVelocityAt (const int idx) const;
 
 private:
 	uint32_t

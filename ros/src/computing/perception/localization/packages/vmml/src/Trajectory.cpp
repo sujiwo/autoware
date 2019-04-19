@@ -14,6 +14,7 @@
 
 
 using namespace std;
+using namespace Eigen;
 
 
 #define dPrecision 3
@@ -211,38 +212,6 @@ Trajectory::subset(const ptime &start, const ptime &stop) const
 }
 
 
-Vector3d
-Trajectory::getLinearVelocityAt (const int idx) const
-{
-	assert(idx<this->size());
-	if (idx==0)
-		return Vector3d::Zero();
-
-	auto pos_k = at(idx),
-		pos_k1 = at(idx-1);
-
-	Vector3d vk = (pos_k.position() - pos_k1.position()) / toSeconds(pos_k.timestamp - pos_k1.timestamp);
-	return vk;
-}
-
-
-Vector3d
-Trajectory::getAngularVelocityAt (const int idx) const
-{
-	assert(idx<this->size());
-	if (idx==0)
-		return Vector3d::Zero();
-
-	auto pos_k = at(idx),
-		pos_k1 = at(idx-1);
-
-	auto rpy_k = quaternionToRPY(pos_k.orientation()),
-		rpy_k1 = quaternionToRPY(pos_k1.orientation());
-
-	// XXX: Unfinished!
-}
-
-
 bool
 Trajectory::dump(const std::string &filename) const
 {
@@ -255,8 +224,8 @@ Trajectory::dump(const std::string &filename) const
 		// Timestamp, position and orientation
 		dsTrFd << at(i).dump() << ' ';
 		// Linear Velocity
-		auto vl = getLinearVelocityAt(i);
-		dsTrFd << dumpVector(vl);
+		auto vl = getVelocityAt(i);
+		dsTrFd << dumpVector(vl.linear);
 
 		dsTrFd << endl;
 	}
@@ -267,3 +236,46 @@ Trajectory::dump(const std::string &filename) const
 }
 
 
+const Twist
+Trajectory::getVelocityAt (const int idx) const
+{
+	if (idx==0)
+		return Twist();
+
+	auto pose_k = at(idx),
+		pose_k_1 = at(idx-1);
+	return Twist(pose_k, pose_k_1);
+}
+
+
+Twist::Twist(const PoseStamped &p1, const PoseStamped &p2)
+{
+	assert(p2.timestamp > p1.timestamp);
+	anchor = p2;
+
+	tduration td = p2.timestamp - p1.timestamp;
+	double s = toSeconds(td);
+
+	linear = (p2.position() - p1.position()) / s;
+
+	// XXX: Validate this
+	Matrix3d RX = p1.orientation().matrix().transpose()*p2.orientation().matrix().transpose();
+	RX -= Matrix3d::Identity();
+	angular[0] = RX(2,1);
+	angular[1] = RX(0,2);
+	angular[2] = RX(1,0);
+	angular /= s;
+}
+
+
+TTransform Twist::displacement(const tduration &td) const
+{
+
+}
+
+
+PoseStamped Twist::extrapolate(const tduration &td) const
+{
+	double s = toSeconds(td);
+	// XXX: Unfinished
+}
