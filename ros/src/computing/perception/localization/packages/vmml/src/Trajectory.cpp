@@ -244,7 +244,7 @@ Trajectory::getVelocityAt (const int idx) const
 
 	auto pose_k = at(idx),
 		pose_k_1 = at(idx-1);
-	return Twist(pose_k, pose_k_1);
+	return Twist(pose_k_1, pose_k);
 }
 
 
