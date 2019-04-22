@@ -213,6 +213,9 @@ public:
 
 	TQuaternion operator * (const double &mul) const;
 	TQuaternion operator / (const double &div) const;
+
+	Eigen::Vector4d asVector() const
+	{ return Eigen::Vector4d(x(), y(), z(), w()); }
 };
 
 

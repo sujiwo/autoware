@@ -93,7 +93,10 @@ struct Twist
 	Twist(const PoseStamped &p1, const PoseStamped &p2);
 
 	TTransform displacement(const tduration &td) const;
+	TTransform displacement(const double &seconds) const;
+
 	PoseStamped extrapolate(const tduration &td) const;
+	PoseStamped extrapolate(const double &seconds) const;
 
 	Eigen::Vector3d linear, angular;
 	PoseStamped anchor;
@@ -127,14 +130,10 @@ public:
 	 */
 	const Twist getVelocityAt (const int idx) const;
 
-private:
 	uint32_t
 	find_lower_bound(const ptime&) const;
 
-/*
-	uint32_t
-	find_lower_bound(const ros::Time&) const;
-*/
+private:
 
 	typedef std::vector<PoseStamped> Parent;
 

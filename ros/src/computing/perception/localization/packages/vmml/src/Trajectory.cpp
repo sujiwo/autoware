@@ -20,6 +20,17 @@ using namespace Eigen;
 #define dPrecision 3
 
 
+Matrix3d skew(const Vector3d &v)
+{
+	Matrix3d S = Matrix3d::Zero();
+	S(1,0) = v[2]; S(0,1) = -v[2];
+	S(2,0) = -v[1]; S(0,2) = v[1];
+	S(2,1) = v[0]; S(1,2) = -v[0];
+
+	return S;
+}
+
+
 class PoseDumpStream: public std::stringstream
 {
 public:
@@ -265,12 +276,29 @@ Twist::Twist(const PoseStamped &p1, const PoseStamped &p2)
 	angular[1] = RX(0,2);
 	angular[2] = RX(1,0);
 	angular /= s;
+
+	auto q1 = p1.orientation().asVector(), q2 = p2.orientation().asVector();
+	Vector4d qt = (q2 - q1) / s;
+
+	return;
 }
 
 
 TTransform Twist::displacement(const tduration &td) const
 {
+	const double sec = toSeconds(td);
+	return displacement(sec);
+}
 
+
+TTransform Twist::displacement(const double &seconds) const
+{
+	Matrix4d Td = Matrix4d::Identity();
+
+	Td.col(3).head(3) = this->linear * seconds;
+	Td.block<3,3>(0,0) += skew(this->angular * seconds);
+
+	return TTransform::Identity();
 }
 
 
