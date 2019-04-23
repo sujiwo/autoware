@@ -43,6 +43,9 @@ public:
 
 	virtual Pose getPose() const = 0;
 
+	virtual PoseStamped getPoseStamped() const
+	{ return PoseStamped(getPose(), getTimestamp()); }
+
 	virtual Eigen::Vector3d getPosition() const = 0;
 
 	virtual Eigen::Quaterniond getOrientation() const = 0;

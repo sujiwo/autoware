@@ -971,11 +971,13 @@ private:
 		debug("lambda: " + to_string(lambda));
 		T12.translation() *= lambda;
 
-		// Match by ICP Lidar scans
+		// Match by NDT Lidar scans
 		auto
 			meFrame1 = meidaiDsPtr->getNative(frnum1),
 			meFrame2 = meidaiDsPtr->getNative(frnum2);
 		TTransform TL12 = Matcher::matchLidarScans(*meFrame1, *meFrame2);
+		// Twist by Lidar
+		Twist tLidar(TL12, toSeconds(meFrame2->getTimestamp() - meFrame1->getTimestamp()));
 
 		/*
 		 * Statistics
@@ -987,6 +989,8 @@ private:
 		debug(dumpVector(T12m));
 		debug("Lidar transformation: ");
 		debug(dumpVector(TL12));
+		debug("Twist (Lidar): ");
+		debug("Linear: " + dumpVector(tLidar.linear) + "; Angular: " + dumpVector(tLidar.angular));
 	}
 
 
