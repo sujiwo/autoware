@@ -136,6 +136,8 @@ public:
 	uint32_t
 	find_lower_bound(const ptime&) const;
 
+	bool isInside(const ptime &t) const;
+
 private:
 
 	typedef std::vector<PoseStamped> Parent;

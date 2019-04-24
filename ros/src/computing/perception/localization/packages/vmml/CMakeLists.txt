@@ -125,6 +125,7 @@ add_library(
 		src/datasets/LidarScanBag.cpp
 #		src/datasets/NdtLocalizer.cpp
 		src/datasets/PclNdtLocalizer.cpp
+		src/datasets/NdtLocalizer2.cpp
 )
 
 

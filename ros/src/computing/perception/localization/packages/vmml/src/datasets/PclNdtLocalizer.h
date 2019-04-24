@@ -51,6 +51,8 @@ public:
 	bool isStarted() const
 	{ return started; }
 
+	static void localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, const Trajectory &gnssTrack, const std::string &pcdMapFile);
+
 protected:
 
 	pcl_omp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;

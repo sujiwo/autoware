@@ -224,6 +224,15 @@ Trajectory::subset(const ptime &start, const ptime &stop) const
 
 
 bool
+Trajectory::isInside(const ptime &t) const
+{
+	if (front().timestamp<=t or back().timestamp>=t)
+		return true;
+	else return false;
+}
+
+
+bool
 Trajectory::dump(const std::string &filename) const
 {
 	fstream dsTrFd (filename, ios_base::out|ios_base::trunc);
