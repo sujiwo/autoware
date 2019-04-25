@@ -160,12 +160,16 @@ Trajectory::at(const ptime &t) const
 
 
 PoseStamped
-Trajectory::interpolate (const ptime& t) const
+Trajectory::interpolate (const ptime& t, uint32_t *i_prev=nullptr, uint32_t *i_next) const
 {
 	assert (front().timestamp<=t and t < back().timestamp);
 
 	uint32_t i0 = find_lower_bound(t)-1;
 	uint32_t i1 = i0+1;
+
+	if (i_prev!=nullptr) *i_prev=i0;
+	if (i_next!=nullptr) *i_next=i1;
+
 	return PoseStamped::interpolate(Parent::at(i0), Parent::at(i1), t);
 }
 

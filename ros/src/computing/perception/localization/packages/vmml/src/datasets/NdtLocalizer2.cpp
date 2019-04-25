@@ -51,8 +51,14 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 
 	// Initialize
 	ptime t0;
+	uint32_t i0, i1;
 	auto scan0 = bagsrc.at(0, &t0);
-	PoseStamped lidarp0 = gnssTrack.interpolate(t0);
+	PoseStamped lidarp0 = gnssTrack.interpolate(t0, &i0, &i1);
+	Twist velocity (gnssTrack.at(i0), gnssTrack.at(i1));
+
+	for (uint32_t i=1; i<bagsrc.size(); ++i) {
+
+	}
 
 	return;
 }

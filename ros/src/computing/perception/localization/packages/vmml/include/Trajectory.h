@@ -120,7 +120,7 @@ public:
 	PoseStamped at(const int idx) const
 	{ return std::vector<PoseStamped>::at(idx); }
 
-	PoseStamped interpolate (const ptime&) const;
+	PoseStamped interpolate (const ptime&, uint32_t *i0=nullptr, uint32_t *i1=nullptr) const;
 
 	PoseStamped extrapolate (const ptime&) const;
 
