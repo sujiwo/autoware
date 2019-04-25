@@ -160,7 +160,7 @@ Trajectory::at(const ptime &t) const
 
 
 PoseStamped
-Trajectory::interpolate (const ptime& t, uint32_t *i_prev=nullptr, uint32_t *i_next) const
+Trajectory::interpolate (const ptime& t, uint32_t *i_prev, uint32_t *i_next) const
 {
 	assert (front().timestamp<=t and t < back().timestamp);
 

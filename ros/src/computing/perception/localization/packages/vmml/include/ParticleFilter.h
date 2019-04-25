@@ -38,10 +38,11 @@ inline double frandom()
 { return (double)rand() / (double)RAND_MAX; }
 
 
-inline double nrand(double stdDev)
+// Calculate random noise with zero mean and S stddev
+inline double nrand(double S)
 {
 	return
-		stdDev * sqrt(-2.0*log(
+		S * sqrt(-2.0*log(
 			frandom())) * cos(2.0*M_PI*frandom());
 }
 

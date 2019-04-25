@@ -15,13 +15,14 @@
 
 #include "utilities.h"
 #include "Trajectory.h"
+#include "ParticleFilter.h"
 #include "datasets/MeidaiBagDataset.h"
 
 
-class NdtLocalizer2 {
+class NdtLocalizer2 : public PF::VehicleBase<Pose, Pose, TTransform> {
 public:
 
-	NdtLocalizer2();
+	NdtLocalizer2(const Pose &initialEstimation);
 
 	virtual ~NdtLocalizer2();
 
@@ -50,9 +51,18 @@ public:
 
 protected:
 
+	const Pose initPose;
+
 	pcl_omp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr pcMap = nullptr;
+
+	PF::ParticleFilter<Pose, Pose, TTransform> pFilter;
+
+	// For particle filter
+	virtual Pose initializeParticleState() const;
+	virtual Pose motionModel(const Pose &vstate, const TTransform &ctrl) const;
+	virtual double measurementModel(const Pose &state, const vector<Pose> &observations) const;
 
 };
 

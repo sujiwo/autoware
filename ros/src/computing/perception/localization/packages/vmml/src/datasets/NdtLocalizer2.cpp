@@ -15,8 +15,18 @@
 using namespace std;
 using namespace Eigen;
 
+const int ParticleNumber = 500;
 
-NdtLocalizer2::NdtLocalizer2()
+const double
+	GnssPlaneStdDev = 2.0,
+	GnssVertStdDev = 0.5;
+
+
+NdtLocalizer2::NdtLocalizer2(const Pose &initialEstimation) :
+
+	initPose(initialEstimation),
+	pFilter(ParticleNumber, *this)
+
 {
 	mNdt.setMaximumIterations(mParams.maximum_iterations);
 	mNdt.setTransformationEpsilon(mParams.transformation_epsilon);
@@ -45,8 +55,6 @@ void
 NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, const Trajectory &gnssTrack, const std::string &pcdMapFile)
 {
 	bagsrc.filtered = true;
-	NdtLocalizer2 lidarLocalizer;
-	lidarLocalizer.loadMap(pcdMapFile);
 	resultTrack.clear();
 
 	// Initialize
@@ -56,9 +64,45 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 	PoseStamped lidarp0 = gnssTrack.interpolate(t0, &i0, &i1);
 	Twist velocity (gnssTrack.at(i0), gnssTrack.at(i1));
 
+	NdtLocalizer2 lidarLocalizer(lidarp0);
+	lidarLocalizer.loadMap(pcdMapFile);
+
 	for (uint32_t i=1; i<bagsrc.size(); ++i) {
 
 	}
 
 	return;
 }
+
+
+Pose
+NdtLocalizer2::initializeParticleState() const
+{
+	Pose cstate = initPose;
+
+	// Randomize
+	cstate.x() += PF::nrand(GnssPlaneStdDev);
+	cstate.y() += PF::nrand(GnssPlaneStdDev);
+	cstate.z() += PF::nrand(GnssVertStdDev);
+
+	return cstate;
+}
+
+
+Pose
+NdtLocalizer2::motionModel(const Pose &vstate, const TTransform &ctrl) const
+{
+	TTransform ctrlWithNoise = ctrl;
+
+	// Add noise to control
+
+	return vstate * ctrlWithNoise;
+}
+
+
+double
+NdtLocalizer2::measurementModel(const Pose &state, const vector<Pose> &observations) const
+{
+
+}
+
