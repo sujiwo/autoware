@@ -284,6 +284,15 @@ struct TTransform : public Eigen::Affine3d
 		ar >> boost::serialization::make_array(data(), 16);
 	}
 
+	inline double &x()
+	{ return translation().x(); }
+
+	inline double &y()
+	{ return translation().y(); }
+
+	inline double &z()
+	{ return translation().z(); }
+
 	const double x() const
 	{ return position().x(); }
 

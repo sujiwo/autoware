@@ -32,6 +32,8 @@ public:
 
 	static void localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, const Trajectory &gnssTrack, const std::string &pcdMapFile);
 
+	static TTransform getTransform(const LidarScanBag::scan_t &scan1, const LidarScanBag::scan_t &scan2);
+
 	struct Parameters
 	{
 		int maximum_iterations = 30;

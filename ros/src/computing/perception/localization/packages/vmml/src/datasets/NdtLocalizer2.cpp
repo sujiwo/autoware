@@ -34,6 +34,8 @@ NdtLocalizer2::NdtLocalizer2(const Pose &initialEstimation) :
 	mNdt.setTransformationEpsilon(mParams.transformation_epsilon);
 	mNdt.setStepSize(mParams.step_size);
 	mNdt.setResolution(mParams.ndt_resolution);
+
+	pFilter.initializeParticles();
 }
 
 
@@ -50,6 +52,14 @@ NdtLocalizer2::loadMap (const std::string &filename)
 	mNdt.setInputTarget(pcMap);
 
 	cout << "Map loaded\n";
+}
+
+
+TTransform
+NdtLocalizer2::getTransform(const LidarScanBag::scan_t &scan1, const LidarScanBag::scan_t &scan2)
+{
+	pcl_omp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
+
 }
 
 
@@ -118,6 +128,10 @@ NdtLocalizer2::measurementModel(const Pose &state, const vector<Pose> &observati
 		ydiff = gnssPose.y() - state.y(),
 		zdiff = gnssPose.z() - state.z();
 
-//	return exp()
+	return exp(-(
+		(xdiff*xdiff / (2*GnssPlaneStdDev*GnssPlaneStdDev)) +
+		(ydiff*ydiff / (2*GnssPlaneStdDev*GnssPlaneStdDev)) +
+		(zdiff*zdiff / (2*GnssVertStdDev*GnssVertStdDev))
+	));
 }
 

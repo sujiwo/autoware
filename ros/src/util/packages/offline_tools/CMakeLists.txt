@@ -95,13 +95,13 @@ target_include_directories(bag_viewer
 )
 
 
-if (CATKIN_ENABLE_TESTING)
-	find_package(rostest REQUIRED)
-	add_rostest_gtest(bag_test 
-		test/test_random_access_bag.launch 
-		test/test_random_access_bag.cpp)
-	target_link_libraries(bag_test 
-		random_access_bag 
-		${catkin_LIBRARIES})
-endif ()
+#if (CATKIN_ENABLE_TESTING)
+#	find_package(rostest REQUIRED)
+#	add_rostest_gtest(bag_test 
+#		test/test_random_access_bag.launch 
+#		test/test_random_access_bag.cpp)
+#	target_link_libraries(bag_test 
+#		random_access_bag 
+#		${catkin_LIBRARIES})
+#endif ()
 
