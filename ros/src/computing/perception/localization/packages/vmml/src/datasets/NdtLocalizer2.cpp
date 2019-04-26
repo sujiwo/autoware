@@ -18,8 +18,10 @@ using namespace Eigen;
 const int ParticleNumber = 500;
 
 const double
-	GnssPlaneStdDev = 2.0,
-	GnssVertStdDev = 0.5;
+	GnssPlaneStdDev = 		2.0,
+	// Need to be larger
+	GnssVertStdDev = 		0.5,
+	ControlShiftStdDev =	0.5;
 
 
 NdtLocalizer2::NdtLocalizer2(const Pose &initialEstimation) :
@@ -95,6 +97,11 @@ NdtLocalizer2::motionModel(const Pose &vstate, const TTransform &ctrl) const
 	TTransform ctrlWithNoise = ctrl;
 
 	// Add noise to control
+	double
+		xshift = PF::nrand(ControlShiftStdDev),
+		yshift = PF::nrand(ControlShiftStdDev),
+		zshift = PF::nrand(0.5*ControlShiftStdDev);
+	ctrlWithNoise.shift(xshift, yshift, zshift);
 
 	return vstate * ctrlWithNoise;
 }
@@ -103,6 +110,14 @@ NdtLocalizer2::motionModel(const Pose &vstate, const TTransform &ctrl) const
 double
 NdtLocalizer2::measurementModel(const Pose &state, const vector<Pose> &observations) const
 {
+	const Pose &gnssPose = observations[0];
 
+	double observationWeight = 0;
+	double wo,
+		xdiff = gnssPose.x() - state.x(),
+		ydiff = gnssPose.y() - state.y(),
+		zdiff = gnssPose.z() - state.z();
+
+//	return exp()
 }
 
