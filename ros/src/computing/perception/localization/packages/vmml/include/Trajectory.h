@@ -133,6 +133,13 @@ public:
 	 */
 	const Twist getVelocityAt (const int idx) const;
 
+	/*
+	 * Estimate velocities at this time.
+	 * Integer position is taken as nearest before t
+	 */
+	inline const Twist getVelocityAt (const ptime &t) const
+	{ return getVelocityAt(find_lower_bound(t)); }
+
 	uint32_t
 	find_lower_bound(const ptime&) const;
 

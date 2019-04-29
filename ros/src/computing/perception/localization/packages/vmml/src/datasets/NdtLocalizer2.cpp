@@ -8,6 +8,7 @@
 
 
 #include <string>
+#include <vector>
 #include <pcl/io/pcd_io.h>
 
 #include "NdtLocalizer2.h"
@@ -56,10 +57,27 @@ NdtLocalizer2::loadMap (const std::string &filename)
 
 
 TTransform
-NdtLocalizer2::getTransform(const LidarScanBag::scan_t &scan1, const LidarScanBag::scan_t &scan2)
+NdtLocalizer2::getTransform(
+	const LidarScanBag::scan_t::ConstPtr &scan1,
+	const LidarScanBag::scan_t::ConstPtr &scan2,
+	bool &isConverged)
 {
 	pcl_omp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
 
+	mNdt.setTransformationEpsilon(0.01);
+	mNdt.setStepSize(0.1);
+	mNdt.setResolution(1.0);
+	mNdt.setMaximumIterations(30);
+	mNdt.setInputSource(scan1);
+	mNdt.setInputTarget(scan2);
+
+	LidarScanBag::scan_t finalCl;
+	TTransform guess12 = TTransform::Identity();
+	mNdt.align(finalCl);
+
+	isConverged = mNdt.hasConverged();
+	if (isConverged) return guess12;
+	else return TTransform::Identity();
 }
 
 
@@ -79,8 +97,21 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 	NdtLocalizer2 lidarLocalizer(lidarp0);
 	lidarLocalizer.loadMap(pcdMapFile);
 
-	for (uint32_t i=1; i<bagsrc.size(); ++i) {
+	auto scan1 = bagsrc.at(0, &lidarLocalizer.lastLocalizationTime);
 
+	for (uint32_t i=1; i<bagsrc.size(); ++i) {
+		ptime currentTime;
+		auto scan2 = bagsrc.at(1, &currentTime);
+
+		bool isConverged;
+		TTransform t1to2 = NdtLocalizer2::getTransform(scan1, scan2, isConverged);
+		auto lastGpsFix = gnssTrack.at(currentTime);
+		// XXX: Unfinished
+//		lidarLocalizer.pFilter.update(t1to2, observationList);
+
+		// After localizing
+		scan1 = scan2;
+		lidarLocalizer.lastLocalizationTime = currentTime;
 	}
 
 	return;

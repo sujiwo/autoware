@@ -32,7 +32,7 @@ public:
 
 	static void localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, const Trajectory &gnssTrack, const std::string &pcdMapFile);
 
-	static TTransform getTransform(const LidarScanBag::scan_t &scan1, const LidarScanBag::scan_t &scan2);
+	static TTransform getTransform(const LidarScanBag::scan_t::ConstPtr &scan1, const LidarScanBag::scan_t::ConstPtr &scan2, bool &isConverged);
 
 	struct Parameters
 	{
@@ -60,6 +60,8 @@ protected:
 	pcl::PointCloud<pcl::PointXYZ>::Ptr pcMap = nullptr;
 
 	PF::ParticleFilter<Pose, Pose, TTransform> pFilter;
+
+	ptime lastLocalizationTime;
 
 	// For particle filter
 	virtual Pose initializeParticleState() const;
