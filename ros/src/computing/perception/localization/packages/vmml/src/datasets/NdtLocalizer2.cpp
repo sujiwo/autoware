@@ -105,9 +105,9 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 
 		bool isConverged;
 		TTransform t1to2 = NdtLocalizer2::getTransform(scan1, scan2, isConverged);
-		auto lastGpsFix = gnssTrack.at(currentTime);
-		// XXX: Unfinished
-//		lidarLocalizer.pFilter.update(t1to2, observationList);
+
+		vector<Pose> gpsFixes {gnssTrack.at(currentTime)};
+		lidarLocalizer.pFilter.update(t1to2, gpsFixes);
 
 		// After localizing
 		scan1 = scan2;
@@ -166,3 +166,21 @@ NdtLocalizer2::measurementModel(const Pose &state, const vector<Pose> &observati
 	));
 }
 
+
+PoseStamped
+NdtLocalizer2::summarizePf()
+{
+	vector<Pose*> posePtrList;
+	pFilter.getStates(posePtrList);
+
+	Vector3d avgstate(0, 0, 0);
+	for (auto p: posePtrList) {
+		avgstate.x() += p->x();
+		avgstate.y() += p->y();
+		avgstate.z() += p->z();
+	}
+
+	avgstate.x() /= double(posePtrList.size());
+	avgstate.y() /= double(posePtrList.size());
+	avgstate.z() /= double(posePtrList.size());
+}

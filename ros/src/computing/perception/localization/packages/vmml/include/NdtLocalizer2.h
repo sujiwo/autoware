@@ -68,6 +68,7 @@ protected:
 	virtual Pose motionModel(const Pose &vstate, const TTransform &ctrl) const;
 	virtual double measurementModel(const Pose &state, const vector<Pose> &observations) const;
 
+	PoseStamped summarizePf();
 };
 
 #endif /* _NDTLOCALIZER2_H_ */
