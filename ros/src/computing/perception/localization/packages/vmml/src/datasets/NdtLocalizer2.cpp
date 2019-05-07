@@ -90,14 +90,26 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 	// Initialize
 	ptime t0;
 	uint32_t i0, i1;
-	auto scan0 = bagsrc.at(0, &t0);
-	PoseStamped lidarp0 = gnssTrack.interpolate(t0, &i0, &i1);
-	Twist velocity (gnssTrack.at(i0), gnssTrack.at(i1));
+	auto scan1 = bagsrc.at(0, &t0);
+	PoseStamped lidarp0;
+	Twist velocity;
+
+	if (t0 < gnssTrack.front().timestamp) {
+		lidarp0 = gnssTrack.extrapolate(t0);
+	}
+
+	else {
+		lidarp0 = gnssTrack.interpolate(t0, &i0, &i1);
+		velocity = Twist(gnssTrack.at(i0), gnssTrack.at(i1));
+	}
+
+	Pose isx = lidarp0;
 
 	NdtLocalizer2 lidarLocalizer(lidarp0);
 	lidarLocalizer.loadMap(pcdMapFile);
+	lidarLocalizer.lastLocalizationTime = t0;
 
-	auto scan1 = bagsrc.at(0, &lidarLocalizer.lastLocalizationTime);
+//	auto scan1 = bagsrc.at(0, &lidarLocalizer.lastLocalizationTime);
 
 	for (uint32_t i=1; i<bagsrc.size(); ++i) {
 		ptime currentTime;
@@ -110,6 +122,11 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 		lidarLocalizer.pFilter.update(t1to2, gpsFixes);
 
 		// After localizing
+		// Make average, then store
+		isx = isx * t1to2;
+		PoseStamped curPoseAvg = lidarLocalizer.summarizePf(currentTime, isx.orientation());
+		resultTrack.push_back(curPoseAvg);
+
 		scan1 = scan2;
 		lidarLocalizer.lastLocalizationTime = currentTime;
 	}
@@ -168,19 +185,21 @@ NdtLocalizer2::measurementModel(const Pose &state, const vector<Pose> &observati
 
 
 PoseStamped
-NdtLocalizer2::summarizePf()
+NdtLocalizer2::summarizePf(const ptime &t, const Quaterniond &orientationSet)
 {
 	vector<Pose*> posePtrList;
 	pFilter.getStates(posePtrList);
 
-	Vector3d avgstate(0, 0, 0);
+	Vector3d avgstatePos(0, 0, 0);
 	for (auto p: posePtrList) {
-		avgstate.x() += p->x();
-		avgstate.y() += p->y();
-		avgstate.z() += p->z();
+		avgstatePos.x() += p->x();
+		avgstatePos.y() += p->y();
+		avgstatePos.z() += p->z();
 	}
 
-	avgstate.x() /= double(posePtrList.size());
-	avgstate.y() /= double(posePtrList.size());
-	avgstate.z() /= double(posePtrList.size());
+	avgstatePos.x() /= double(posePtrList.size());
+	avgstatePos.y() /= double(posePtrList.size());
+	avgstatePos.z() /= double(posePtrList.size());
+
+
 }
