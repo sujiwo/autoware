@@ -92,6 +92,7 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 	uint32_t i0, i1;
 	auto scan1 = bagsrc.at(0, &t0);
 	PoseStamped lidarp0;
+	// Unused at this time
 	Twist velocity;
 
 	if (t0 < gnssTrack.front().timestamp) {
@@ -113,11 +114,12 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 
 	for (uint32_t i=1; i<bagsrc.size(); ++i) {
 		ptime currentTime;
-		auto scan2 = bagsrc.at(1, &currentTime);
+		auto scan2 = bagsrc.at(i, &currentTime);
 
 		bool isConverged;
 		TTransform t1to2 = NdtLocalizer2::getTransform(scan1, scan2, isConverged);
 
+		// XXX: do not use at(), but interpolate or extrapolate
 		vector<Pose> gpsFixes {gnssTrack.at(currentTime)};
 		lidarLocalizer.pFilter.update(t1to2, gpsFixes);
 
@@ -129,7 +131,10 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 
 		scan1 = scan2;
 		lidarLocalizer.lastLocalizationTime = currentTime;
+
+		cout << i << " / " << bagsrc.size() << '\r' << flush;
 	}
+	cout << endl;
 
 	return;
 }
@@ -187,7 +192,7 @@ NdtLocalizer2::measurementModel(const Pose &state, const vector<Pose> &observati
 PoseStamped
 NdtLocalizer2::summarizePf(const ptime &t, const Quaterniond &orientationSet)
 {
-	vector<Pose*> posePtrList;
+	vector<Pose*> posePtrList(pFilter.getNumberOfParticles());
 	pFilter.getStates(posePtrList);
 
 	Vector3d avgstatePos(0, 0, 0);
@@ -201,5 +206,5 @@ NdtLocalizer2::summarizePf(const ptime &t, const Quaterniond &orientationSet)
 	avgstatePos.y() /= double(posePtrList.size());
 	avgstatePos.z() /= double(posePtrList.size());
 
-
+	return PoseStamped(avgstatePos, orientationSet, t);
 }

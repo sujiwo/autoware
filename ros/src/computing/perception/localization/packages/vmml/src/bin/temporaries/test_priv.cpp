@@ -30,5 +30,8 @@ int main(int argc, char *argv[])
 
 	NdtLocalizer2::localizeFromBag(*lidarBag, ndtTrajectory, gnssTrajectory, "/home/sujiwo/Data/NagoyaUniversityMap/bin_meidai_ndmap.pcd");
 
+	// XXX: Do something with generated trajectory
+	ndtTrajectory.dump("/tmp/ndt_localization.csv");
+
 	return 0;
 }
