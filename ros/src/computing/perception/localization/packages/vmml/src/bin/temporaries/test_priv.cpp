@@ -22,7 +22,7 @@ using namespace Eigen;
 
 int main(int argc, char *argv[])
 {
-	MeidaiBagDataset::Ptr meidaiDs = MeidaiBagDataset::load("/media/sujiwo/ssd/campus_loop/campus_loop-1.bag");
+	MeidaiBagDataset::Ptr meidaiDs = MeidaiBagDataset::load("/media/sujiwo/ssd/sample-mapping-tiny.bag");
 
 	auto lidarBag = meidaiDs->getLidarScanBag();
 	auto gnssTrajectory = meidaiDs->getGnssTrajectory();

@@ -72,11 +72,10 @@ NdtLocalizer2::getTransform(
 	mNdt.setInputTarget(scan2);
 
 	LidarScanBag::scan_t finalCl;
-	TTransform guess12 = TTransform::Identity();
 	mNdt.align(finalCl);
 
 	isConverged = mNdt.hasConverged();
-	if (isConverged) return guess12;
+	if (isConverged) return mNdt.getFinalTransformation();
 	else return TTransform::Identity();
 }
 
@@ -120,7 +119,12 @@ NdtLocalizer2::localizeFromBag (LidarScanBag &bagsrc, Trajectory &resultTrack, c
 		TTransform t1to2 = NdtLocalizer2::getTransform(scan1, scan2, isConverged);
 
 		// XXX: do not use at(), but interpolate or extrapolate
-		vector<Pose> gpsFixes {gnssTrack.at(currentTime)};
+		Pose gpsPose;
+		if (currentTime>=gnssTrack.front().timestamp and currentTime<=gnssTrack.back().timestamp)
+			gpsPose = gnssTrack.at(currentTime);
+		else
+			gpsPose = gnssTrack.extrapolate(currentTime);
+		vector<Pose> gpsFixes {gpsPose};
 		lidarLocalizer.pFilter.update(t1to2, gpsFixes);
 
 		// After localizing
@@ -157,22 +161,24 @@ NdtLocalizer2::initializeParticleState() const
 Pose
 NdtLocalizer2::motionModel(const Pose &vstate, const TTransform &ctrl) const
 {
-	TTransform ctrlWithNoise = ctrl;
+	Pose curPose = vstate * ctrl;
 
-	// Add noise to control
+	// Add noise to current pose
 	double
 		xshift = PF::nrand(ControlShiftStdDev),
 		yshift = PF::nrand(ControlShiftStdDev),
 		zshift = PF::nrand(0.5*ControlShiftStdDev);
-	ctrlWithNoise.shift(xshift, yshift, zshift);
 
-	return vstate * ctrlWithNoise;
+	Pose poseWithNoise = curPose.shift(xshift, yshift, zshift);
+
+	return poseWithNoise;
 }
 
 
 double
 NdtLocalizer2::measurementModel(const Pose &state, const vector<Pose> &observations) const
 {
+	// XXX: Only considers single observation
 	const Pose &gnssPose = observations[0];
 
 	double observationWeight = 0;
