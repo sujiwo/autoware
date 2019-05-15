@@ -12,7 +12,11 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <pcl_omp_registration/ndt.h>
+
 #include "utilities.h"
+#include "Trajectory.h"
+#include "RandomAccessBag.h"
 #include "datasets/MeidaiBagDataset.h"
 
 
@@ -21,6 +25,8 @@ namespace LidarMapper {
 
 class LocalMapper {
 public:
+
+friend class LidarMapper;
 
 struct Param {
 	double
@@ -36,16 +42,35 @@ struct Param {
 		max_submap_size;
 };
 
+struct ScanProcessLog {
+	dataItemId scanNum;
+	ptime timestamp;
+
+
+	std::string dump();
+};
+
+
 LocalMapper(const Param &p);
-void feed();
+void feed(LidarScanBag::scan_t::ConstPtr &newscan);
+
 
 protected:
+	// Need separate NDT instance due to possible different parameters
+	pcl_omp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
+
+	// Counters
+	dataItemId currentScanId = 0;
 
 };	// LidarMapper::LocalMapper
 
 
+
+
 class GlobalMapper {
 public:
+
+friend class LidarMapper;
 
 struct Param {
 	double
@@ -62,6 +87,7 @@ void loadMap(const std::string &point_cloud_map);
 void feed();
 
 protected:
+	dataItemId currentScanId = 0;
 
 };	// LidarMapper::GlobalMapper
 
@@ -69,16 +95,31 @@ protected:
 
 class LidarMapper {
 public:
-	LidarMapper(const GlobalMapper::Param&, const LocalMapper::Param&);
+
+	friend class GlobalMapper;
+	friend class LocalMapper;
+
+	LidarMapper(const GlobalMapper::Param&, const LocalMapper::Param&, const std::string &bagpath, const std::string &lidarCalibrationFile);
 	virtual ~LidarMapper();
 
-	static void createMapFromBag(const std::string &bagpath);
+	void build();
+
+	static int createMapFromBag(const std::string &bagpath, const std::string &configPath, const std::string &lidarCalibrationFilePath);
+
+	static void parseConfiguration(const std::string &configPath, GlobalMapper::Param &g, LocalMapper::Param &l, TTransform &worldToMap);
 
 protected:
 	const GlobalMapper::Param globalMapperParameters;
 	const LocalMapper::Param localMapperParameters;
 
+	TTransform worldToMap;
 
+	Trajectory gnssTrajectory;
+
+	// Bag access
+	rosbag::Bag bagFd;
+	RandomAccessBag::Ptr gnssBag;
+	LidarScanBag::Ptr lidarBag;
 };
 
 } // LidarMapper

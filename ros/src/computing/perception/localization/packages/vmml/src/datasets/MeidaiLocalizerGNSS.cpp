@@ -18,10 +18,6 @@
 using namespace std;
 
 
-const Vector3d
-	GNSS_Translation_Offset (18500, 93800, -33);
-
-
 class wrong_nmea_sentence : public exception
 {};
 
@@ -123,20 +119,20 @@ void convertNMEASentenceToState (nmea_msgs::SentencePtr &msg, GnssLocalizerState
 }
 
 
-PoseStamped createFromState(const GnssLocalizerState &state)
+PoseStamped createFromState(const GnssLocalizerState &state, TTransform worldToMap)
 {
 	if (state.latitude==positionInvalid or state.longitude==positionInvalid)
 		throw invalid_gnss_position();
 
 	TQuaternion q(state.roll_, state.pitch_, state.yaw_);
 	Vector3d p(state.geo.y(), state.geo.x(), state.geo.z());
-	p = p + GNSS_Translation_Offset;
-	Pose pt = Pose::from_Pos_Quat(p, q);
+//	p = p + GNSS_Translation_Offset;
+	Pose pt = worldToMap * Pose::from_Pos_Quat(p, q);
 	return pt;
 }
 
 
-void createTrajectoryFromGnssBag (RandomAccessBag &bagsrc, Trajectory &trajectory, int plane_number)
+void createTrajectoryFromGnssBag (RandomAccessBag &bagsrc, Trajectory &trajectory, int plane_number, TTransform worldToMap)
 {
 	const double orientationTimeout = 10.0;
 
@@ -173,7 +169,7 @@ void createTrajectoryFromGnssBag (RandomAccessBag &bagsrc, Trajectory &trajector
 
 				PoseStamped px;
 				try {
-					px = createFromState(state);
+					px = createFromState(state, worldToMap);
 				} catch (invalid_gnss_position &e) {
 					continue;
 				}
@@ -190,7 +186,7 @@ void createTrajectoryFromGnssBag (RandomAccessBag &bagsrc, Trajectory &trajector
 
 			PoseStamped px;
 			try {
-				px = createFromState(state);
+				px = createFromState(state, worldToMap);
 			} catch (invalid_gnss_position &e) {
 				continue;
 			}

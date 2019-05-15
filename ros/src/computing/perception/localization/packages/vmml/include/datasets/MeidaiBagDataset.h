@@ -159,6 +159,9 @@ public:
 	inline RandomAccessBag::Ptr getVelodyneBag()
 	{ return velodyneBag; }
 
+	inline RandomAccessBag::Ptr getGnssBag()
+	{ return gnssBag; }
+
 	LidarScanBag::Ptr getLidarScanBag ();
 
 	virtual Trajectory getCameraTrajectory(const ptime timeStart=MIN_TIME, const ptime timeStop=MAX_TIME) const;
@@ -248,7 +251,8 @@ private:
 void createTrajectoryFromGnssBag (
 	RandomAccessBag &bagsrc,
 	Trajectory &trajectory,
-	int plane_number=7);
+	int plane_number=7,
+	TTransform worldToMap=TTransform::Identity());
 
 void createTrajectoryFromNDT (
 	LidarScanBag &bagsrc,

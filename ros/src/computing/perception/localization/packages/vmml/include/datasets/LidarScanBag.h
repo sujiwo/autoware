@@ -50,6 +50,12 @@ public:
 	scan_t::ConstPtr
 	at (int position, boost::posix_time::ptime *msgTime=nullptr);
 
+	scan_t::ConstPtr
+	getFiltered (int position, boost::posix_time::ptime *msgTime=nullptr);
+
+	scan_t::ConstPtr
+	getUnfiltered (int position, boost::posix_time::ptime *msgTime=nullptr);
+
 	inline
 	scan_t::ConstPtr
 	atDurationSecond (const double S)

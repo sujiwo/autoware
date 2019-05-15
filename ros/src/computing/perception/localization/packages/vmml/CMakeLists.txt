@@ -199,3 +199,16 @@ target_link_libraries(
 		${catkin_LIBRARIES}
 )
 
+
+add_executable(
+	lidar_mapper
+		src/bin/lidar_mapper/main.cpp
+		src/bin/lidar_mapper/LidarMapper.cpp
+)
+
+target_link_libraries(
+	lidar_mapper
+		vmml
+		${REQUIRED_LIBS}
+		${catkin_LIBRARIES}
+)

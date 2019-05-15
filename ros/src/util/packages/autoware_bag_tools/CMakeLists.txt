@@ -17,7 +17,7 @@ install(PROGRAMS
 
 
 add_executable(nmea2kml nodes/nmea2kml/nmea2kml.cpp nodes/nmea2kml/ReadNMEASentence.cpp)
-target_link_libraries(nmea2kml ${catkin_LIBRARIES})
+target_link_libraries(nmea2kml tinyxml ${catkin_LIBRARIES})
 
 add_dependencies(nmea2kml ${catkin_EXPORTED_TARGETS})
 

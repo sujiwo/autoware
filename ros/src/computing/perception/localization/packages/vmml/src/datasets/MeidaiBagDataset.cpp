@@ -56,6 +56,11 @@ const TTransform defaultLidarToBaselinkTransform =
 		Vector3d(1.2, 0, 2.0),
 		Quaterniond::Identity());
 
+const Vector3d
+	GNSS_Translation_Offset (18500, 93800, -33);
+const TTransform
+	Default_GNSS_Translation_Offset = TTransform::from_XYZ_RPY(GNSS_Translation_Offset, 0, 0, 0);
+
 
 class cache_error : public runtime_error
 {};
@@ -337,7 +342,7 @@ MeidaiBagDataset::createTrajectories(ptime startTimep, ptime stopTimep, bool use
 	 * when LIDAR localization fails
 	 */
 	cout << "Creating GNSS Trajectory\n";
-	createTrajectoryFromGnssBag(*gnssBag, gnssTrack);
+	createTrajectoryFromGnssBag(*gnssBag, gnssTrack, 7, Default_GNSS_Translation_Offset);
 
 	/*
 	 * As of December 2018, NDT localization still could fail undetected (unless it drifts out-of-the-map)

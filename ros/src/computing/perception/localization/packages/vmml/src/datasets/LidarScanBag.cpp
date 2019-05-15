@@ -184,6 +184,29 @@ LidarScanBag::at (int position, boost::posix_time::ptime *msgTime)
 
 
 LidarScanBag::scan_t::ConstPtr
+LidarScanBag::getFiltered (int position, boost::posix_time::ptime *msgTime)
+{
+	auto filterState = filtered;
+	filtered = true;
+	auto scan = at(position, msgTime);
+	filtered = filterState;
+	return scan;
+}
+
+
+LidarScanBag::scan_t::ConstPtr
+LidarScanBag::getUnfiltered (int position, boost::posix_time::ptime *msgTime)
+{
+	auto filterState = filtered;
+	filtered = false;
+	auto scan = at(position, msgTime);
+	filtered = filterState;
+	return scan;
+}
+
+
+
+LidarScanBag::scan_t::ConstPtr
 LidarScanBag::VoxelGridFilter (
 	LidarScanBag::scan_t::ConstPtr vcloud,
 	double voxel_leaf_size,

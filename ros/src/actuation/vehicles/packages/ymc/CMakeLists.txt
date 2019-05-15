@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ymc)
 
-set(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-Wall ${CMAKE_CXX_FLAGS} -fPIC")
 
 find_package(autoware_build_flags REQUIRED)
 
