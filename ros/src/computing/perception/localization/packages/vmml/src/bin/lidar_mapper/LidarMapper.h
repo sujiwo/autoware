@@ -13,6 +13,7 @@
 #include <pcl/point_types.h>
 
 #include <pcl_omp_registration/ndt.h>
+#include <pcl/filters/voxel_grid.h>
 
 #include "utilities.h"
 #include "Trajectory.h"
@@ -43,9 +44,15 @@ struct Param {
 };
 
 struct ScanProcessLog {
-	dataItemId scanNum;
+	dataItemId sequence_num;
 	ptime timestamp;
-
+	int numOfScanPoints, filteredScanPoints, mapNumOfPoints;
+	bool hasConverged;
+	float fitness_score;
+	int num_of_iteration;
+	Pose poseAtScan;
+	float shift;
+	double submap_size;
 
 	std::string dump();
 };
@@ -56,8 +63,12 @@ void feed(LidarScanBag::scan_t::ConstPtr &newscan);
 
 
 protected:
+	Param param;
+
 	// Need separate NDT instance due to possible different parameters
 	pcl_omp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
+	// Need our own voxel grid filter
+	pcl::VoxelGrid<pcl::PointXYZI> mVoxelGridFilter;
 
 	// Counters
 	dataItemId currentScanId = 0;

@@ -52,6 +52,20 @@ public:
 		pc->points.push_back(point);
 		++pc->width;
 	}
+
+	LidarScanBag::scan4_t::Ptr toScan4() const
+	{
+		LidarScanBag::scan4_t::Ptr scan4(new LidarScanBag::scan4_t(pc->width, pc->height));
+		for (int i=0; i<scan4->width; ++i) {
+			for (int j=0; j<scan4->height; ++j) {
+				scan4->at(j,i).x = pc->at(j,i).x;
+				scan4->at(j,i).y = pc->at(j,i).y;
+				scan4->at(j,i).z = pc->at(j,i).z;
+				scan4->at(j,i).intensity = pc->at(j,i).intensity;
+			}
+		}
+		return scan4;
+	}
 };
 
 
@@ -180,6 +194,13 @@ LidarScanBag::at (int position, boost::posix_time::ptime *msgTime)
 	if (msgTime!=nullptr)
 		*msgTime = msgP->header.stamp.toBoost();
 	return convertMessage(msgP);
+}
+
+
+sensor_msgs::PointCloud2::ConstPtr
+LidarScanBag::getRaw(int position)
+{
+
 }
 
 

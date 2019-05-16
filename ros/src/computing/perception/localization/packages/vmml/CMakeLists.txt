@@ -204,6 +204,7 @@ add_executable(
 	lidar_mapper
 		src/bin/lidar_mapper/main.cpp
 		src/bin/lidar_mapper/LidarMapper.cpp
+		src/bin/lidar_mapper/LocalMapper.cpp
 )
 
 target_link_libraries(

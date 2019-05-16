@@ -33,6 +33,9 @@ public:
 	typedef pcl::PointXYZ point3_t;
 	typedef pcl::PointCloud<point3_t> scan_t;
 
+	typedef pcl::PointXYZI point4_t;
+	typedef pcl::PointCloud<point4_t> scan4_t;
+
 	LidarScanBag(
 		rosbag::Bag const &bag, const std::string &topic,
 		const ros::Time &startTime = ros::TIME_MIN,
@@ -50,11 +53,21 @@ public:
 	scan_t::ConstPtr
 	at (int position, boost::posix_time::ptime *msgTime=nullptr);
 
+	template<typename PointT>
+	pcl::PointCloud<PointT>::ConstPtr
+	at(int position, boost::posix_time::ptime *msgTime=nullptr);
+
+	scan4_t::ConstPtr
+	getScan4 (int position, boost::posix_time::ptime &msgTime=nullptr);
+
 	scan_t::ConstPtr
 	getFiltered (int position, boost::posix_time::ptime *msgTime=nullptr);
 
 	scan_t::ConstPtr
 	getUnfiltered (int position, boost::posix_time::ptime *msgTime=nullptr);
+
+	sensor_msgs::PointCloud2::ConstPtr
+	getRaw(int position);
 
 	inline
 	scan_t::ConstPtr
@@ -78,6 +91,16 @@ protected:
 
 	scan_t::ConstPtr
 	convertMessage(velodyne_msgs::VelodyneScan::ConstPtr bagmsg);
+
+	scan4_t::ConstPtr
+	convertMessage4(velodyne_msgs::VelodyneScan::ConstPtr bagmsg);
+
+	template<typename PointT>
+	pcl::PointCloud<typename PointT>::ConstPtr
+	convertMessage(velodyne_msgs::VelodyneScan::ConstPtr bagmsg)
+	{
+
+	}
 
 	void prepare(const std::string &lidarCalibFile);
 };

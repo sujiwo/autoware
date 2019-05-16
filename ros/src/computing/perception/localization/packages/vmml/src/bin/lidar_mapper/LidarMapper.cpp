@@ -23,6 +23,7 @@ LidarMapper::LidarMapper(const GlobalMapper::Param &gp, const LocalMapper::Param
 	localMapperParameters(lp)
 {
 	bagFd.open(bagpath, rosbag::bagmode::Read);
+	// XXX: Please confirm this `convention' of topic sentences
 	gnssBag = RandomAccessBag::Ptr(new RandomAccessBag(bagFd, "/nmea_sentence"));
 	lidarBag = LidarScanBag::Ptr(
 		new LidarScanBag(bagFd,
