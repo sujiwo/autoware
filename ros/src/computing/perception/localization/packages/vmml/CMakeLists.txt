@@ -123,6 +123,7 @@ add_library(
 		src/datasets/MeidaiLocalizerGNSS.cpp
 #		src/datasets/MeidaiLocalizerNDT.cpp
 		src/datasets/LidarScanBag.cpp
+		src/datasets/LidarScanBag2.cpp
 #		src/datasets/NdtLocalizer.cpp
 		src/datasets/PclNdtLocalizer.cpp
 		src/datasets/NdtLocalizer2.cpp
@@ -205,6 +206,7 @@ add_executable(
 		src/bin/lidar_mapper/main.cpp
 		src/bin/lidar_mapper/LidarMapper.cpp
 		src/bin/lidar_mapper/LocalMapper.cpp
+		src/bin/lidar_mapper/GlobalMapper.cpp
 )
 
 target_link_libraries(

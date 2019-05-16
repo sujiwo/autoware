@@ -20,17 +20,21 @@ namespace LidarMapper {
 
 LidarMapper::LidarMapper(const GlobalMapper::Param &gp, const LocalMapper::Param &lp, const string &bagpath, const string &lidarCalibrationFilePath) :
 	globalMapperParameters(gp),
-	localMapperParameters(lp)
+	localMapperParameters(lp),
+
+	localMapperProc(localMapperParameters),
+	globalMapperProc(globalMapperParameters)
 {
 	bagFd.open(bagpath, rosbag::bagmode::Read);
 	// XXX: Please confirm this `convention' of topic sentences
 	gnssBag = RandomAccessBag::Ptr(new RandomAccessBag(bagFd, "/nmea_sentence"));
-	lidarBag = LidarScanBag::Ptr(
-		new LidarScanBag(bagFd,
+	lidarBag = LidarScanBag2::Ptr(
+		new LidarScanBag2(bagFd,
 			"/velodyne_packets",
 			ros::TIME_MIN,
 			ros::TIME_MAX,
-			lidarCalibrationFilePath));
+			lidarCalibrationFilePath,
+			localMapperParameters.min_scan_range));
 }
 
 
@@ -39,6 +43,9 @@ LidarMapper::~LidarMapper() {
 }
 
 
+/*
+ * Core routine
+ */
 void
 LidarMapper::build()
 {
@@ -49,7 +56,10 @@ LidarMapper::build()
 	for (int i=0; i<bagsize; ++i) {
 
 		ptime messageTime;
-		auto currentScan = lidarBag->getUnfiltered(i, &messageTime);
+		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
+
+		// XXX: Currently focused on local mapping
+		localMapperProc.feed(currentScan4, messageTime);
 	}
 }
 

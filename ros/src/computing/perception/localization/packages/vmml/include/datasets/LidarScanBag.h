@@ -53,12 +53,12 @@ public:
 	scan_t::ConstPtr
 	at (int position, boost::posix_time::ptime *msgTime=nullptr);
 
-	template<typename PointT>
-	pcl::PointCloud<PointT>::ConstPtr
-	at(int position, boost::posix_time::ptime *msgTime=nullptr);
+//	template<typename PointT>
+//	pcl::PointCloud<typename PointT>::ConstPtr
+//	at(int position, boost::posix_time::ptime *msgTime=nullptr);
 
 	scan4_t::ConstPtr
-	getScan4 (int position, boost::posix_time::ptime &msgTime=nullptr);
+	getScan4 (int position, boost::posix_time::ptime *msgTime=nullptr);
 
 	scan_t::ConstPtr
 	getFiltered (int position, boost::posix_time::ptime *msgTime=nullptr);
@@ -95,12 +95,12 @@ protected:
 	scan4_t::ConstPtr
 	convertMessage4(velodyne_msgs::VelodyneScan::ConstPtr bagmsg);
 
-	template<typename PointT>
-	pcl::PointCloud<typename PointT>::ConstPtr
-	convertMessage(velodyne_msgs::VelodyneScan::ConstPtr bagmsg)
-	{
-
-	}
+//	template<typename PointT>
+//	pcl::PointCloud<typename PointT>::ConstPtr
+//	convertMessage(velodyne_msgs::VelodyneScan::ConstPtr bagmsg)
+//	{
+//
+//	}
 
 	void prepare(const std::string &lidarCalibFile);
 };

@@ -19,6 +19,7 @@
 #include "Trajectory.h"
 #include "RandomAccessBag.h"
 #include "datasets/MeidaiBagDataset.h"
+#include "datasets/LidarScanBag2.h"
 
 
 namespace LidarMapper {
@@ -43,8 +44,9 @@ struct Param {
 		max_submap_size;
 };
 
+// XXX: Subject to change
 struct ScanProcessLog {
-	dataItemId sequence_num;
+	uint64_t sequence_num;
 	ptime timestamp;
 	int numOfScanPoints, filteredScanPoints, mapNumOfPoints;
 	bool hasConverged;
@@ -53,25 +55,38 @@ struct ScanProcessLog {
 	Pose poseAtScan;
 	float shift;
 	double submap_size;
+	ptime submap_origin_stamp;
+	Pose submap_origin_pose;
 
 	std::string dump();
 };
 
 
 LocalMapper(const Param &p);
-void feed(LidarScanBag::scan_t::ConstPtr &newscan);
+void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime);
 
 
 protected:
 	Param param;
 
 	// Need separate NDT instance due to possible different parameters
-	pcl_omp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
+	pcl_omp::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
 	// Need our own voxel grid filter
 	pcl::VoxelGrid<pcl::PointXYZI> mVoxelGridFilter;
 
 	// Counters
-	dataItemId currentScanId = 0;
+	bool initial_scan_loaded = false;
+	uint64_t currentScanId = 0;
+
+	pcl::PointCloud<pcl::PointXYZI> currentMap, currentSubmap;
+
+	// States
+	bool isMapUpdate = true;
+	bool hasSubmapIdIncremented = true;
+	Pose previous_pose;
+	TTransform
+		lastDisplacement = TTransform::Identity(),
+		displacementFromOrigin = TTransform::Identity();
 
 };	// LidarMapper::LocalMapper
 
@@ -95,10 +110,11 @@ struct Param {
 
 GlobalMapper(const Param &p);
 void loadMap(const std::string &point_cloud_map);
-void feed();
+void feed(const pcl::PointCloud<pcl::PointXYZ> &newscan);
 
 protected:
-	dataItemId currentScanId = 0;
+	Param param;
+	uint64_t currentScanId = 0;
 
 };	// LidarMapper::GlobalMapper
 
@@ -117,11 +133,17 @@ public:
 
 	static int createMapFromBag(const std::string &bagpath, const std::string &configPath, const std::string &lidarCalibrationFilePath);
 
+	// Second variant
+	static int createMapFromBag(const std::string &bagpath, const std::string &workingDirectory);
+
 	static void parseConfiguration(const std::string &configPath, GlobalMapper::Param &g, LocalMapper::Param &l, TTransform &worldToMap);
 
 protected:
 	const GlobalMapper::Param globalMapperParameters;
 	const LocalMapper::Param localMapperParameters;
+
+	LocalMapper localMapperProc;
+	GlobalMapper globalMapperProc;
 
 	TTransform worldToMap;
 
@@ -130,7 +152,7 @@ protected:
 	// Bag access
 	rosbag::Bag bagFd;
 	RandomAccessBag::Ptr gnssBag;
-	LidarScanBag::Ptr lidarBag;
+	LidarScanBag2::Ptr lidarBag;
 };
 
 } // LidarMapper
