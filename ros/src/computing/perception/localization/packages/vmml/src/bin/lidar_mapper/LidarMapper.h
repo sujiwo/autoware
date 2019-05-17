@@ -54,7 +54,7 @@ struct ScanProcessLog {
 	int num_of_iteration;
 	Pose poseAtScan;
 	float shift;
-	double submap_size;
+	double submap_size = 0;
 	ptime submap_origin_stamp;
 	Pose submap_origin_pose;
 
@@ -83,10 +83,14 @@ protected:
 	// States
 	bool isMapUpdate = true;
 	bool hasSubmapIdIncremented = true;
-	Pose previous_pose;
+	Pose
+		previous_pose,
+		added_pose = TTransform::Identity();
 	TTransform
 		lastDisplacement = TTransform::Identity(),
 		displacementFromOrigin = TTransform::Identity();
+	double
+		submap_size = 0;
 
 };	// LidarMapper::LocalMapper
 

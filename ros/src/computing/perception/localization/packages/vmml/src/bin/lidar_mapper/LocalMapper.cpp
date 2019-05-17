@@ -50,7 +50,8 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 		initial_scan_loaded = true;
 	}
 
-	// Apply voxel grid filter
+	// Apply voxel grid filter.
+	// The result of this filter will be used to match current submap
 	LocalMapperCloud::Ptr filtered_scan_ptr (new LocalMapperCloud);
 	mVoxelGridFilter.setInputCloud(newScan);
 	mVoxelGridFilter.filter(*filtered_scan_ptr);
@@ -74,8 +75,8 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 
 	TTransform t_localizer = mNdt.getFinalTransformation().cast<double>();
 
-	// XXX: What if we use the same point cloud ?
-	pcl::transformPointCloud(*scan_ptr, *scan_ptr, t_localizer);
+	LocalMapperCloud::Ptr transformed_scan_ptr(new LocalMapperCloud);
+	pcl::transformPointCloud(*scan_ptr, *transformed_scan_ptr, t_localizer);
 
 	feedResult.fitness_score = mNdt.getFitnessScore();
 
@@ -87,13 +88,26 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 		hasSubmapIdIncremented = false;
 	}
 
-	// Calculate the displacement (current_pose - previous_pose)
+	// Calculate the displacement (or offset) (current_pose - previous_pose)
 	lastDisplacement = previous_pose.inverse() * current_pose;
 
 	// Update position
 	previous_pose = current_pose;
 
-	// Calculate shift
+	// Calculate shift (in X-Y plane only)
+	double shift = (current_pose.position()-added_pose.position()).head(2).norm();
+	if (shift >= param.min_add_scan_shift) {
+		submap_size += shift;
+		currentMap += *transformed_scan_ptr;
+		currentSubmap += *transformed_scan_ptr;
+		added_pose = current_pose;
+		isMapUpdate = true;
+	}
+
+	// Output submap file after a certain threshold
+	if (submap_size >= param.max_submap_size) {
+
+	}
 	// XXX: Unfinished
 
 	// End
