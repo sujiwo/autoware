@@ -104,11 +104,23 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 		isMapUpdate = true;
 	}
 
+	// XXX: Do some output to CSV here
+
 	// Output submap file after a certain threshold
 	if (submap_size >= param.max_submap_size) {
+		if (currentSubmap.size() != 0) {
+			// XXX: Output the PCD
 
+
+			currentMap = currentSubmap;
+			currentSubmap.clear();
+			submap_size = 0;
+		}
+
+		submap_id++;
+		hasSubmapIdIncremented = true;
 	}
-	// XXX: Unfinished
+	// XXX: Put logging here
 
 	// End
 	currentScanId += 1;

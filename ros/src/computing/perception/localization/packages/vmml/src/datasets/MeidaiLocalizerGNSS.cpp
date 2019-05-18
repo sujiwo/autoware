@@ -126,7 +126,11 @@ PoseStamped createFromState(const GnssLocalizerState &state, TTransform worldToM
 
 	TQuaternion q(state.roll_, state.pitch_, state.yaw_);
 	Vector3d p(state.geo.y(), state.geo.x(), state.geo.z());
-//	p = p + GNSS_Translation_Offset;
+
+	// The above code transform latitude/longitude to UTM coordinate
+	// (easting/northing).
+	// The following line transform easting/northing
+	// into some numbers that are `smaller'
 	Pose pt = worldToMap * Pose::from_Pos_Quat(p, q);
 	return pt;
 }

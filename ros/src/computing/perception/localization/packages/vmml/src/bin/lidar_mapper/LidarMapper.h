@@ -89,8 +89,8 @@ protected:
 	TTransform
 		lastDisplacement = TTransform::Identity(),
 		displacementFromOrigin = TTransform::Identity();
-	double
-		submap_size = 0;
+	double submap_size = 0;
+	uint64_t submap_id = 0;
 
 };	// LidarMapper::LocalMapper
 
