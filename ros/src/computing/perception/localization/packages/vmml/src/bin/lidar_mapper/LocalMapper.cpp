@@ -7,6 +7,7 @@
 
 
 #include <pcl/common/transforms.h>
+#include <pcl/io/pcd_io.h>
 
 #include "LidarMapper.h"
 
@@ -18,8 +19,6 @@ using namespace std;
 
 
 namespace LidarMapper {
-
-typedef PointCloud<PointXYZI> LocalMapperCloud;
 
 
 LocalMapper::LocalMapper(const LocalMapper::Param &p):
@@ -41,13 +40,13 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 {
 	ScanProcessLog feedResult;
 
-	LocalMapperCloud::Ptr scan_ptr(new LocalMapperCloud);
-	pcl::copyPointCloud(*newScan, *scan_ptr);
+	current_scan_time = messageTime;
 
 	// Add initial point cloud to velodyne_map
 	if (initial_scan_loaded==false) {
 		currentMap += *newScan;
 		initial_scan_loaded = true;
+		return;
 	}
 
 	// Apply voxel grid filter.
@@ -72,13 +71,12 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 
 	LocalMapperCloud::Ptr output_cloud(new LocalMapperCloud);
 	mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
+	feedResult.fitness_score = mNdt.getFitnessScore();
 
 	TTransform t_localizer = mNdt.getFinalTransformation().cast<double>();
 
 	LocalMapperCloud::Ptr transformed_scan_ptr(new LocalMapperCloud);
-	pcl::transformPointCloud(*scan_ptr, *transformed_scan_ptr, t_localizer);
-
-	feedResult.fitness_score = mNdt.getFitnessScore();
+	pcl::transformPointCloud(*newScan, *transformed_scan_ptr, t_localizer);
 
 	Pose current_pose = t_localizer;
 
@@ -110,7 +108,8 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 	if (submap_size >= param.max_submap_size) {
 		if (currentSubmap.size() != 0) {
 			// XXX: Output the PCD
-
+			cerr << "Outputting submap" << endl;
+			pcl::io::savePCDFileBinary("/tmp/test_submap.pcd", currentSubmap);
 
 			currentMap = currentSubmap;
 			currentSubmap.clear();
@@ -124,6 +123,7 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 
 	// End
 	currentScanId += 1;
+	cerr << "Scan ID: " << currentScanId << endl;
 }
 
 

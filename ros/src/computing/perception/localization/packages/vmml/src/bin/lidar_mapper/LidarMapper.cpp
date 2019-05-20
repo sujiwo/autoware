@@ -50,7 +50,7 @@ void
 LidarMapper::build()
 {
 	// Build GNSS Trajectory
-	createTrajectoryFromGnssBag(*gnssBag, gnssTrajectory, 7, worldToMap);
+//	createTrajectoryFromGnssBag(*gnssBag, gnssTrajectory, 7, worldToMap);
 
 	const int bagsize = lidarBag->size();
 	for (int i=0; i<bagsize; ++i) {

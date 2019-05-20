@@ -30,40 +30,41 @@ public:
 
 friend class LidarMapper;
 
-struct Param {
-	double
-		ndt_res,
-		step_size,
-		trans_eps;
-	int
-		max_iter;
-	double
-		voxel_leaf_size,
-		min_scan_range,
-		min_add_scan_shift,
-		max_submap_size;
-};
+	struct Param {
+		double
+			ndt_res,
+			step_size,
+			trans_eps;
+		int
+			max_iter;
+		double
+			voxel_leaf_size,
+			min_scan_range,
+			min_add_scan_shift,
+			max_submap_size;
+	};
 
-// XXX: Subject to change
-struct ScanProcessLog {
-	uint64_t sequence_num;
-	ptime timestamp;
-	int numOfScanPoints, filteredScanPoints, mapNumOfPoints;
-	bool hasConverged;
-	float fitness_score;
-	int num_of_iteration;
-	Pose poseAtScan;
-	float shift;
-	double submap_size = 0;
-	ptime submap_origin_stamp;
-	Pose submap_origin_pose;
+	// XXX: Subject to change
+	struct ScanProcessLog {
+		uint64_t sequence_num;
+		ptime timestamp;
+		int numOfScanPoints, filteredScanPoints, mapNumOfPoints;
+		bool hasConverged;
+		float fitness_score;
+		int num_of_iteration;
+		Pose poseAtScan;
+		float shift;
+		double submap_size = 0;
+		ptime submap_origin_stamp;
+		Pose submap_origin_pose;
 
-	std::string dump();
-};
+		std::string dump();
+	};
 
+	typedef pcl::PointCloud<pcl::PointXYZI> LocalMapperCloud;
 
-LocalMapper(const Param &p);
-void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime);
+	LocalMapper(const Param &p);
+	void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime);
 
 
 protected:
@@ -78,13 +79,14 @@ protected:
 	bool initial_scan_loaded = false;
 	uint64_t currentScanId = 0;
 
-	pcl::PointCloud<pcl::PointXYZI> currentMap, currentSubmap;
+	LocalMapperCloud currentMap, currentSubmap;
 
 	// States
+	ptime current_scan_time;
 	bool isMapUpdate = true;
 	bool hasSubmapIdIncremented = true;
 	Pose
-		previous_pose,
+		previous_pose = TTransform::Identity(),
 		added_pose = TTransform::Identity();
 	TTransform
 		lastDisplacement = TTransform::Identity(),
