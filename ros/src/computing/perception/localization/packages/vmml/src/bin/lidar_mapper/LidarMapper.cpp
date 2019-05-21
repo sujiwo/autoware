@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <fstream>
 #include <sstream>
 
 #include "LidarMapper.h"
@@ -13,6 +14,7 @@
 
 using namespace std;
 using namespace Eigen;
+using namespace boost::filesystem;
 
 
 namespace LidarMapper {
@@ -85,6 +87,33 @@ LidarMapper::createMapFromBag(const string &bagpath, const std::string &configPa
 }
 
 
+int
+LidarMapper::createMapFromBag(const std::string &bagpath, const std::string &workingDirectory)
+{
+	GlobalMapper::Param globalParameters;
+	LocalMapper::Param localParameters;
+	TTransform worldToMapTransform;
+
+	path workDir(workingDirectory);
+	if (is_directory(workDir)==false)
+		throw runtime_error("Unable to open work directory");
+
+	path
+		configPath = workDir / "lidar_mapper.ini",
+		lidarCalibrationPath = workDir / "calibration.yaml";
+
+	LidarMapper::parseConfiguration(configPath.string(), globalParameters, localParameters, worldToMapTransform);
+
+	LidarMapper lidarMapperInstance(globalParameters, localParameters, bagpath, lidarCalibrationPath);
+	lidarMapperInstance.worldToMap = worldToMapTransform;
+	lidarMapperInstance.workDir = workDir;
+
+	lidarMapperInstance.build();
+
+	return 0;
+}
+
+
 void
 LidarMapper::parseConfiguration(const std::string &configPath, GlobalMapper::Param &g, LocalMapper::Param &l, TTransform &worldToMap)
 {
@@ -92,20 +121,20 @@ LidarMapper::parseConfiguration(const std::string &configPath, GlobalMapper::Par
 	inipp::Ini<char> ini;
 	ini.parse(configFile);
 
-	inipp::extract(ini.sections["Local"]["ndt_res"], l.ndt_res);
-	inipp::extract(ini.sections["Local"]["step_size"], l.step_size);
-	inipp::extract(ini.sections["Local"]["trans_eps"], l.trans_eps);
-	inipp::extract(ini.sections["Local"]["max_iter"], l.max_iter);
-	inipp::extract(ini.sections["Local"]["voxel_leaf_size"], l.voxel_leaf_size);
-	inipp::extract(ini.sections["Local"]["min_scan_range"], l.min_scan_range);
-	inipp::extract(ini.sections["Local"]["min_add_scan_shift"], l.min_add_scan_shift);
-	inipp::extract(ini.sections["Local"]["max_submap_size"], l.max_submap_size);
+	inipp::extract(ini.sections["Local Mapping"]["ndt_res"], l.ndt_res);
+	inipp::extract(ini.sections["Local Mapping"]["step_size"], l.step_size);
+	inipp::extract(ini.sections["Local Mapping"]["trans_eps"], l.trans_eps);
+	inipp::extract(ini.sections["Local Mapping"]["max_iter"], l.max_iter);
+	inipp::extract(ini.sections["Local Mapping"]["voxel_leaf_size"], l.voxel_leaf_size);
+	inipp::extract(ini.sections["Local Mapping"]["min_scan_range"], l.min_scan_range);
+	inipp::extract(ini.sections["Local Mapping"]["min_add_scan_shift"], l.min_add_scan_shift);
+	inipp::extract(ini.sections["Local Mapping"]["max_submap_size"], l.max_submap_size);
 
-	inipp::extract(ini.sections["Global"]["ndt_res"], g.ndt_res);
-	inipp::extract(ini.sections["Global"]["step_size"], g.step_size);
-	inipp::extract(ini.sections["Global"]["trans_eps"], g.trans_eps);
-	inipp::extract(ini.sections["Global"]["max_iter"], g.max_iter);
-	inipp::extract(ini.sections["Global"]["queue_size"], g.queue_size);
+	inipp::extract(ini.sections["Global Matching"]["ndt_res"], g.ndt_res);
+	inipp::extract(ini.sections["Global Matching"]["step_size"], g.step_size);
+	inipp::extract(ini.sections["Global Matching"]["trans_eps"], g.trans_eps);
+	inipp::extract(ini.sections["Global Matching"]["max_iter"], g.max_iter);
+	inipp::extract(ini.sections["Global Matching"]["queue_size"], g.queue_size);
 
 	Vector3d vWorldToMapTf, oWorldToMapTf;
 	inipp::extract(ini.sections["GNSS"]["x"], vWorldToMapTf.x());

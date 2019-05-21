@@ -13,7 +13,10 @@
 #include <pcl/point_types.h>
 
 #include <pcl_omp_registration/ndt.h>
+#include <pcl/registration/ndt.h>
 #include <pcl/filters/voxel_grid.h>
+
+#include <boost/filesystem.hpp>
 
 #include "utilities.h"
 #include "Trajectory.h"
@@ -71,7 +74,8 @@ protected:
 	Param param;
 
 	// Need separate NDT instance due to possible different parameters
-	pcl_omp::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
+//	pcl_omp::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
+	pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
 	// Need our own voxel grid filter
 	pcl::VoxelGrid<pcl::PointXYZI> mVoxelGridFilter;
 
@@ -159,6 +163,8 @@ protected:
 	rosbag::Bag bagFd;
 	RandomAccessBag::Ptr gnssBag;
 	LidarScanBag2::Ptr lidarBag;
+
+	boost::filesystem::path workDir;
 };
 
 } // LidarMapper

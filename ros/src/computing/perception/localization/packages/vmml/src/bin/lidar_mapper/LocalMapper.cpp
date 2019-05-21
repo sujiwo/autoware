@@ -16,6 +16,7 @@ using pcl::PointCloud;
 using pcl::PointXYZI;
 
 using namespace std;
+using namespace Eigen;
 
 
 namespace LidarMapper {
@@ -38,6 +39,11 @@ LocalMapper::LocalMapper(const LocalMapper::Param &p):
 void
 LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 {
+	// XXX: Debug
+	bool __debug=false;
+	if (__debug==true)
+		pcl::io::savePCDFileBinary("/tmp/debug.pcd", *newScan);
+
 	ScanProcessLog feedResult;
 
 	current_scan_time = messageTime;
@@ -93,7 +99,7 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 	previous_pose = current_pose;
 
 	// Calculate shift (in X-Y plane only)
-	double shift = (current_pose.position()-added_pose.position()).head(2).norm();
+	double shift = Vector2d(current_pose.x()-added_pose.x(), current_pose.y()-added_pose.y()).norm();
 	if (shift >= param.min_add_scan_shift) {
 		submap_size += shift;
 		currentMap += *transformed_scan_ptr;
@@ -123,7 +129,7 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 
 	// End
 	currentScanId += 1;
-	cerr << "Scan ID: " << currentScanId << endl;
+	cerr << currentScanId << ' ' << shift << endl;
 }
 
 

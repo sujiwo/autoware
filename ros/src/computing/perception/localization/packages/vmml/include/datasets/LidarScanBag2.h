@@ -19,10 +19,16 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <velodyne_pointcloud/rawdata.h>
+#include <velodyne_pointcloud/pointcloudXYZIR.h>
 
 //#include "utilities.h"
 #include "RandomAccessBag.h"
 
+template<typename PointT>
+using ScanPtr = boost::shared_ptr<pcl::PointCloud<PointT>>;
+
+template<typename PointT>
+using ScanConstPtr = boost::shared_ptr<const pcl::PointCloud<PointT>>;
 
 /*
  * XXX: These values may need to be adjusted
@@ -34,21 +40,64 @@ const float
 	velodyneViewWidth = 2*M_PI;
 
 
-class mPointcloudXYZIR : public velodyne_rawdata::DataContainerBase
+template<typename PointT>
+class mPointCloud : public velodyne_rawdata::DataContainerBase
 {
 public:
-	velodyne_rawdata::VPointCloud::Ptr pc;
+	ScanPtr<PointT> pc;
 
-	mPointcloudXYZIR() : pc(new velodyne_rawdata::VPointCloud) {}
+	mPointCloud() : pc(new pcl::PointCloud<PointT>) {}
 
-	virtual void
-	addPoint(const float& x, const float& y, const float& z,
+	void addPoint(const float& x, const float& y, const float& z,
 		const uint16_t& ring,
 		const uint16_t& azimuth,
 		const float& distance,
 		const float& intensity);
-
 };
+
+
+template<> void mPointCloud<pcl::PointXYZ>::addPoint(
+	const float& x, const float& y, const float& z,
+	const uint16_t& ring,
+	const uint16_t& azimuth,
+	const float& distance,
+	const float& intensity);
+
+template<> void mPointCloud<pcl::PointXYZI>::addPoint(
+	const float& x, const float& y, const float& z,
+	const uint16_t& ring,
+	const uint16_t& azimuth,
+	const float& distance,
+	const float& intensity);
+
+/*
+template<>
+class mPointCloud<pcl::PointXYZ> : public velodyne_rawdata::DataContainerBase
+{
+public:
+	ScanPtr<pcl::PointXYZ> pc;
+
+	virtual void addPoint(const float& x, const float& y, const float& z,
+		const uint16_t& ring,
+		const uint16_t& azimuth,
+		const float& distance,
+		const float& intensity);
+};
+
+
+template<>
+class mPointCloud<pcl::PointXYZI> : public velodyne_rawdata::DataContainerBase
+{
+public:
+	ScanPtr<pcl::PointXYZI> pc;
+
+	virtual void addPoint(const float& x, const float& y, const float& z,
+		const uint16_t& ring,
+		const uint16_t& azimuth,
+		const float& distance,
+		const float& intensity);
+};
+*/
 
 
 /*
@@ -59,12 +108,6 @@ class LidarScanBag2 : public RandomAccessBag
 public:
 
 	typedef std::shared_ptr<LidarScanBag2> Ptr;
-
-	template<typename PointT>
-	using ScanPtr = boost::shared_ptr<pcl::PointCloud<PointT>>;
-
-	template<typename PointT>
-	using ScanConstPtr = boost::shared_ptr<const pcl::PointCloud<PointT>>;
 
 	LidarScanBag2(
 		rosbag::Bag const &bag,
@@ -159,7 +202,7 @@ protected:
 	ScanConstPtr<PointT>
 	convertMessage(velodyne_msgs::VelodyneScan::ConstPtr bagmsg)
 	{
-		mPointcloudXYZIR outPoints;
+		mPointCloud<PointT> outPoints;
 		outPoints.pc->header.stamp = pcl_conversions::toPCL(bagmsg->header).stamp;
 		outPoints.pc->header.frame_id = bagmsg->header.frame_id;
 		outPoints.pc->height = 1;
@@ -170,14 +213,11 @@ protected:
 			data_->unpack(bagmsg->packets[i], outPoints);
 		}
 
-		ScanPtr<PointT> scanResult(new pcl::PointCloud<PointT>);
-		pcl::copyPointCloud(*outPoints.pc, *scanResult);
-
 		if (filtered) {
-			return VoxelGridFilter<PointT>(scanResult);
+			return VoxelGridFilter<PointT>(outPoints.pc);
 		}
 		else
-			return scanResult;
+			return outPoints.pc;
 	}
 };
 

@@ -76,8 +76,27 @@ LidarScanBag2::prepare(const string &lidarCalibFile,
 }
 
 
+template<>
+void mPointCloud<pcl::PointXYZ>::addPoint(const float& x, const float& y, const float& z,
+			const uint16_t& ring,
+			const uint16_t& azimuth,
+			const float& distance,
+			const float& intensity)
+{
+	// convert polar coordinates to Euclidean XYZ
+	pcl::PointXYZ point;
+	point.x = x;
+	point.y = y;
+	point.z = z;
+
+	// append this point to the cloud
+	pc->points.push_back(point);
+	++pc->width;
+}
+
+template<>
 void
-mPointcloudXYZIR::addPoint(
+mPointCloud<pcl::PointXYZI>::addPoint(
 	const float& x, const float& y, const float& z,
 	const uint16_t& ring,
 	const uint16_t& azimuth,
@@ -85,8 +104,7 @@ mPointcloudXYZIR::addPoint(
 	const float& intensity)
 {
 	// convert polar coordinates to Euclidean XYZ
-	velodyne_rawdata::VPoint point;
-	point.ring = ring;
+	pcl::PointXYZI point;
 	point.x = x;
 	point.y = y;
 	point.z = z;
