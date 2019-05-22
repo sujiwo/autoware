@@ -60,9 +60,11 @@ LidarMapper::build()
 
 		ptime messageTime;
 		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
+		auto currentScan3 = lidarBag->getFiltered<pcl::PointXYZ>(i);
 
 		// XXX: Currently focused on local mapping
 		localMapperProc.feed(currentScan4, messageTime);
+		globalMapperProc.feed(currentScan3, messageTime);
 	}
 }
 

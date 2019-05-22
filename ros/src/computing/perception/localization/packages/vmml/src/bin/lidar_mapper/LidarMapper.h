@@ -30,7 +30,8 @@ namespace LidarMapper {
 
 const std::string
 	ConfigurationFilename 		= "lidar_mapper.ini",
-	LidarCalibrationFilename 	= "calibration.yaml";
+	LidarCalibrationFilename 	= "calibration.yaml",
+	GlobalMapFilename			= "global_map.pcd";
 
 
 class LidarMapper;
@@ -121,26 +122,32 @@ protected:
 class GlobalMapper {
 public:
 
-friend class LidarMapper;
+	friend class LidarMapper;
 
-struct Param {
-	double
-		ndt_res,
-		step_size,
-		trans_eps;
-	int
-		max_iter,
-		queue_size;
-};
+	struct Param {
+		double
+			ndt_res,
+			step_size,
+			trans_eps;
+		int
+			max_iter,
+			queue_size;
+	};
 
-GlobalMapper(LidarMapper &_parent, const Param &p);
-void loadMap(const std::string &point_cloud_map);
-void feed(const pcl::PointCloud<pcl::PointXYZ> &newscan);
+	typedef pcl::PointCloud<pcl::PointXYZ> GlobalMapperCloud;
+
+	GlobalMapper(LidarMapper &_parent, const Param &p);
+	void loadMap(const std::string &point_cloud_map_filename);
+	void feed(GlobalMapperCloud::ConstPtr &newscan, const ptime &messageTime);
 
 protected:
 	Param param;
 	LidarMapper &parent;
 	uint64_t currentScanId = 0;
+
+	GlobalMapperCloud::Ptr globalMap;
+	pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
+	Trajectory vehicleTrack;
 
 };	// LidarMapper::GlobalMapper
 
