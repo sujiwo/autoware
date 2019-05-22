@@ -24,10 +24,11 @@ LidarMapper::LidarMapper(const GlobalMapper::Param &gp, const LocalMapper::Param
 	globalMapperParameters(gp),
 	localMapperParameters(lp),
 
-	localMapperProc(localMapperParameters),
-	globalMapperProc(globalMapperParameters)
+	localMapperProc(*this, localMapperParameters),
+	globalMapperProc(*this, globalMapperParameters)
 {
 	bagFd.open(bagpath, rosbag::bagmode::Read);
+
 	// XXX: Please confirm this `convention' of topic sentences
 	gnssBag = RandomAccessBag::Ptr(new RandomAccessBag(bagFd, "/nmea_sentence"));
 	lidarBag = LidarScanBag2::Ptr(
@@ -99,8 +100,8 @@ LidarMapper::createMapFromBag(const std::string &bagpath, const std::string &wor
 		throw runtime_error("Unable to open work directory");
 
 	path
-		configPath = workDir / "lidar_mapper.ini",
-		lidarCalibrationPath = workDir / "calibration.yaml";
+		configPath = workDir / ConfigurationFilename,
+		lidarCalibrationPath = workDir / LidarCalibrationFilename;
 
 	LidarMapper::parseConfiguration(configPath.string(), globalParameters, localParameters, worldToMapTransform);
 

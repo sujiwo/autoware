@@ -22,7 +22,8 @@ using namespace Eigen;
 namespace LidarMapper {
 
 
-LocalMapper::LocalMapper(const LocalMapper::Param &p):
+LocalMapper::LocalMapper(LidarMapper &_parent, const LocalMapper::Param &p):
+	parent(_parent),
 	param(p)
 {
 	// Parameter set
@@ -39,11 +40,6 @@ LocalMapper::LocalMapper(const LocalMapper::Param &p):
 void
 LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 {
-	// XXX: Debug
-	bool __debug=false;
-	if (__debug==true)
-		pcl::io::savePCDFileBinary("/tmp/debug.pcd", *newScan);
-
 	ScanProcessLog feedResult;
 
 	current_scan_time = messageTime;
@@ -77,7 +73,6 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 
 	LocalMapperCloud::Ptr output_cloud(new LocalMapperCloud);
 	mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
-	feedResult.fitness_score = mNdt.getFitnessScore();
 
 	TTransform t_localizer = mNdt.getFinalTransformation().cast<double>();
 
@@ -87,8 +82,8 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 	Pose current_pose = t_localizer;
 
 	if (hasSubmapIdIncremented==true) {
-		feedResult.submap_origin_stamp = messageTime;
-		feedResult.submap_origin_pose = current_pose;
+		submapOriginTimestamp = messageTime;
+		submapOriginPose = current_pose;
 		hasSubmapIdIncremented = false;
 	}
 
@@ -108,14 +103,13 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 		isMapUpdate = true;
 	}
 
-	// XXX: Do some output to CSV here
-
 	// Output submap file after a certain threshold
 	if (submap_size >= param.max_submap_size) {
 		if (currentSubmap.size() != 0) {
 			// XXX: Output the PCD
 			cerr << "Outputting submap" << endl;
-			pcl::io::savePCDFileBinary("/tmp/test_submap.pcd", currentSubmap);
+			auto submapPath = parent.workDir / generateSubmapPcdName();
+			pcl::io::savePCDFileBinary(submapPath.string(), currentSubmap);
 
 			currentMap = currentSubmap;
 			currentSubmap.clear();
@@ -125,7 +119,10 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 		submap_id++;
 		hasSubmapIdIncremented = true;
 	}
+
 	// XXX: Put logging here
+	feedResult.fitness_score = mNdt.getFitnessScore();
+	feedResult.num_of_iteration = mNdt.getFinalNumIteration();
 
 	// End
 	currentScanId += 1;
@@ -138,6 +135,16 @@ string LocalMapper::ScanProcessLog::dump()
 	stringstream ss;
 
 
+	return ss.str();
+}
+
+
+string LocalMapper::generateSubmapPcdName()
+{
+	stringstream ss;
+
+	tduration td = submapOriginTimestamp - unixTime0;
+	ss << td.total_seconds() << '_' << currentScanId << ".pcd";
 	return ss.str();
 }
 

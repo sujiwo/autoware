@@ -11,7 +11,8 @@
 namespace LidarMapper {
 
 
-GlobalMapper::GlobalMapper(const GlobalMapper::Param &p) :
+GlobalMapper::GlobalMapper(LidarMapper &_parent, const GlobalMapper::Param &p) :
+	parent(_parent),
 	param(p)
 {
 

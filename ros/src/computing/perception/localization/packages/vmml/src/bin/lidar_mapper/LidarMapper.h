@@ -28,6 +28,14 @@
 namespace LidarMapper {
 
 
+const std::string
+	ConfigurationFilename 		= "lidar_mapper.ini",
+	LidarCalibrationFilename 	= "calibration.yaml";
+
+
+class LidarMapper;
+
+
 class LocalMapper {
 public:
 
@@ -54,6 +62,7 @@ friend class LidarMapper;
 		int numOfScanPoints, filteredScanPoints, mapNumOfPoints;
 		bool hasConverged;
 		float fitness_score;
+		float transformation_probability;
 		int num_of_iteration;
 		Pose poseAtScan;
 		float shift;
@@ -66,14 +75,15 @@ friend class LidarMapper;
 
 	typedef pcl::PointCloud<pcl::PointXYZI> LocalMapperCloud;
 
-	LocalMapper(const Param &p);
+	LocalMapper(LidarMapper &_parent, const Param &p);
 	void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime);
 
 
 protected:
 	Param param;
+	LidarMapper &parent;
 
-	// Need separate NDT instance due to possible different parameters
+	// Need separate NDT instances due to possible different parameters
 //	pcl_omp::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
 	pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
 	// Need our own voxel grid filter
@@ -97,6 +107,10 @@ protected:
 		displacementFromOrigin = TTransform::Identity();
 	double submap_size = 0;
 	uint64_t submap_id = 0;
+	ptime submapOriginTimestamp;
+	Pose submapOriginPose;
+
+	std::string generateSubmapPcdName();
 
 };	// LidarMapper::LocalMapper
 
@@ -118,12 +132,13 @@ struct Param {
 		queue_size;
 };
 
-GlobalMapper(const Param &p);
+GlobalMapper(LidarMapper &_parent, const Param &p);
 void loadMap(const std::string &point_cloud_map);
 void feed(const pcl::PointCloud<pcl::PointXYZ> &newscan);
 
 protected:
 	Param param;
+	LidarMapper &parent;
 	uint64_t currentScanId = 0;
 
 };	// LidarMapper::GlobalMapper
