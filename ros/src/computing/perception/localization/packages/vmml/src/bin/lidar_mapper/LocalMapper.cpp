@@ -106,10 +106,8 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 	// Output submap file after a certain threshold
 	if (submap_size >= param.max_submap_size) {
 		if (currentSubmap.size() != 0) {
-			// XXX: Output the PCD
-			cerr << "Outputting submap" << endl;
-			auto submapPath = parent.workDir / generateSubmapPcdName();
-			pcl::io::savePCDFileBinary(submapPath.string(), currentSubmap);
+
+			outputCurrentSubmap();
 
 			currentMap = currentSubmap;
 			currentSubmap.clear();
@@ -126,7 +124,14 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 
 	// End
 	currentScanId += 1;
-	cerr << currentScanId << ' ' << shift << endl;
+}
+
+
+void LocalMapper::outputCurrentSubmap()
+{
+	auto submapPath = parent.workDir / generateSubmapPcdName();
+	cerr << "Outputting submap: " << submapPath.string() << endl;
+	pcl::io::savePCDFileBinary(submapPath.string(), currentSubmap);
 }
 
 

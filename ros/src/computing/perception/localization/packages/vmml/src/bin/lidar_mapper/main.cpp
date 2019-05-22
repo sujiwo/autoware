@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <iostream>
 
 #include "LidarMapper.h"
 
@@ -12,11 +13,14 @@
 /*
  * Parameter Description
  * 1st: Path to Bag file
- * 2nd: Path to configuration file
- * 3nd: Path to LiDAR calibration file
+ * 2nd: Path to working directory
  */
 int main(int argc, char *argv[])
 {
-	LidarMapper::LidarMapper::createMapFromBag(argv[1], argv[2], argv[3]);
+	try {
+		LidarMapper::LidarMapper::createMapFromBag(argv[1], argv[2]);
+	} catch (std::exception &e) {
+		std::cerr << "Error: " << e.what() << "\n";
+	}
 	return 0;
 }

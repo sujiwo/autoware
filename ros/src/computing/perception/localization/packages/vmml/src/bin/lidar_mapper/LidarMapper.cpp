@@ -53,7 +53,7 @@ void
 LidarMapper::build()
 {
 	// Build GNSS Trajectory
-//	createTrajectoryFromGnssBag(*gnssBag, gnssTrajectory, 7, worldToMap);
+	createTrajectoryFromGnssBag(*gnssBag, gnssTrajectory, 7, worldToMap);
 
 	const int bagsize = lidarBag->size();
 	for (int i=0; i<bagsize; ++i) {
@@ -68,7 +68,8 @@ LidarMapper::build()
 
 
 /*
- * Entry point to the whole mapping process
+ * Entry point to mapping process
+ * XXX: to be deprecated
  */
 int
 LidarMapper::createMapFromBag(const string &bagpath, const std::string &configPath, const string &lidarCalibrationFilePath)
@@ -88,6 +89,9 @@ LidarMapper::createMapFromBag(const string &bagpath, const std::string &configPa
 }
 
 
+/*
+ * Entry point to the whole mapping process
+ */
 int
 LidarMapper::createMapFromBag(const std::string &bagpath, const std::string &workingDirectory)
 {
@@ -103,9 +107,14 @@ LidarMapper::createMapFromBag(const std::string &bagpath, const std::string &wor
 		configPath = workDir / ConfigurationFilename,
 		lidarCalibrationPath = workDir / LidarCalibrationFilename;
 
+	if (is_regular_file(configPath)==false)
+		throw runtime_error("Configuration file does not exist at work directory");
+	if (is_regular_file(lidarCalibrationPath)==false)
+		throw runtime_error("Calibration file does not exist at work directory");
+
 	LidarMapper::parseConfiguration(configPath.string(), globalParameters, localParameters, worldToMapTransform);
 
-	LidarMapper lidarMapperInstance(globalParameters, localParameters, bagpath, lidarCalibrationPath);
+	LidarMapper lidarMapperInstance(globalParameters, localParameters, bagpath, lidarCalibrationPath.string());
 	lidarMapperInstance.worldToMap = worldToMapTransform;
 	lidarMapperInstance.workDir = workDir;
 
@@ -118,7 +127,7 @@ LidarMapper::createMapFromBag(const std::string &bagpath, const std::string &wor
 void
 LidarMapper::parseConfiguration(const std::string &configPath, GlobalMapper::Param &g, LocalMapper::Param &l, TTransform &worldToMap)
 {
-	ifstream configFile(configPath);
+	std::ifstream configFile(configPath);
 	inipp::Ini<char> ini;
 	ini.parse(configFile);
 

@@ -77,6 +77,7 @@ friend class LidarMapper;
 
 	LocalMapper(LidarMapper &_parent, const Param &p);
 	void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime);
+	void outputCurrentSubmap();
 
 
 protected:

@@ -70,35 +70,6 @@ template<> void mPointCloud<pcl::PointXYZI>::addPoint(
 	const float& distance,
 	const float& intensity);
 
-/*
-template<>
-class mPointCloud<pcl::PointXYZ> : public velodyne_rawdata::DataContainerBase
-{
-public:
-	ScanPtr<pcl::PointXYZ> pc;
-
-	virtual void addPoint(const float& x, const float& y, const float& z,
-		const uint16_t& ring,
-		const uint16_t& azimuth,
-		const float& distance,
-		const float& intensity);
-};
-
-
-template<>
-class mPointCloud<pcl::PointXYZI> : public velodyne_rawdata::DataContainerBase
-{
-public:
-	ScanPtr<pcl::PointXYZI> pc;
-
-	virtual void addPoint(const float& x, const float& y, const float& z,
-		const uint16_t& ring,
-		const uint16_t& azimuth,
-		const float& distance,
-		const float& intensity);
-};
-*/
-
 
 /*
  * Representation of Rosbag Velodyne Scan as point cloud
