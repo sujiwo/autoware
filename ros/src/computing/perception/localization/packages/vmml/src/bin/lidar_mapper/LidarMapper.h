@@ -149,6 +149,13 @@ protected:
 	pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
 	Trajectory vehicleTrack;
 
+	// States
+	Pose
+		previous_pose = TTransform::Identity(),
+		added_pose = TTransform::Identity();
+	TTransform
+		lastDisplacement = TTransform::Identity();
+
 };	// LidarMapper::GlobalMapper
 
 
@@ -159,24 +166,23 @@ public:
 	friend class GlobalMapper;
 	friend class LocalMapper;
 
-	LidarMapper(const GlobalMapper::Param&, const LocalMapper::Param&, const std::string &bagpath, const std::string &lidarCalibrationFile);
+	LidarMapper(const std::string &bagpath, const boost::filesystem::path &myWorkDir);
 	virtual ~LidarMapper();
 
 	void build();
 
-	static int createMapFromBag(const std::string &bagpath, const std::string &configPath, const std::string &lidarCalibrationFilePath);
+//	static int createMapFromBag(const std::string &bagpath, const std::string &configPath, const std::string &lidarCalibrationFilePath);
 
-	// Second variant
 	static int createMapFromBag(const std::string &bagpath, const std::string &workingDirectory);
 
 	static void parseConfiguration(const std::string &configPath, GlobalMapper::Param &g, LocalMapper::Param &l, TTransform &worldToMap);
 
 protected:
-	const GlobalMapper::Param globalMapperParameters;
-	const LocalMapper::Param localMapperParameters;
+	GlobalMapper::Param globalMapperParameters;
+	LocalMapper::Param localMapperParameters;
 
-	LocalMapper localMapperProc;
-	GlobalMapper globalMapperProc;
+	std::shared_ptr<LocalMapper> localMapperProc;
+	std::shared_ptr<GlobalMapper> globalMapperProc;
 
 	TTransform worldToMap;
 

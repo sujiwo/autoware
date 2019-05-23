@@ -15,6 +15,8 @@ using namespace std;
 
 namespace LidarMapper {
 
+const double PREDICT_POSE_THRESHOLD = 0.5;
+
 
 GlobalMapper::GlobalMapper(LidarMapper &_parent, const GlobalMapper::Param &p) :
 	parent(_parent),
@@ -48,7 +50,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 		return;
 
 	// see if position is available in GNSS trajectory
-	Pose guessPose;
+	Pose guessPose, currentPose;
 	if (currentScanId==0) {
 		if (messageTime < parent.gnssTrajectory.front().timestamp) {
 			if (toSeconds(parent.gnssTrajectory.front().timestamp-messageTime) > 0.1)
@@ -63,7 +65,35 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 		}
 	}
 
-	// XXX: Unfinished
+	else {
+		// Guess Pose from last displacement
+		Vector3d rot = quaternionToRPY(lastDisplacement.orientation());
+		TTransform guessDisplacement = TTransform::from_XYZ_RPY(lastDisplacement.translation(), 0, 0, rot.z());
+		guessPose = previous_pose * guessDisplacement;
+	}
+
+	GlobalMapperCloud::Ptr output_cloud(new GlobalMapperCloud);
+	mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
+	Pose ndtPose = mNdt.getFinalTransformation().cast<double>();
+
+	// Calculate difference between NDT pose and predicted pose
+	double predict_pose_error = (ndtPose.position()-guessPose.position()).norm();
+
+	if (predict_pose_error <= PREDICT_POSE_THRESHOLD) {
+		currentPose = ndtPose;
+	}
+	else {
+		currentPose = guessPose;
+	}
+
+	// velocity and acceleration not needed
+
+	// XXX: Calculate NDT reliability
+
+	previous_pose = currentPose;
+	vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
+
+	return;
 }
 
 }	// namespace LidarMapper

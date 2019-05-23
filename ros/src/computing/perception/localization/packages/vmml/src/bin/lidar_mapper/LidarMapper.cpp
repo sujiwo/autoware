@@ -20,24 +20,36 @@ using namespace boost::filesystem;
 namespace LidarMapper {
 
 
-LidarMapper::LidarMapper(const GlobalMapper::Param &gp, const LocalMapper::Param &lp, const string &bagpath, const string &lidarCalibrationFilePath) :
-	globalMapperParameters(gp),
-	localMapperParameters(lp),
-
-	localMapperProc(*this, localMapperParameters),
-	globalMapperProc(*this, globalMapperParameters)
+LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::path &myWorkDir)
 {
-	bagFd.open(bagpath, rosbag::bagmode::Read);
+	workDir = myWorkDir;
+	if (is_directory(workDir)==false)
+		throw runtime_error("Unable to open work directory");
 
-	// XXX: Please confirm this `convention' of topic sentences
+	path
+		configPath = workDir / ConfigurationFilename,
+		lidarCalibrationPath = workDir / LidarCalibrationFilename;
+
+	if (is_regular_file(configPath)==false)
+		throw runtime_error("Configuration file does not exist at work directory");
+	if (is_regular_file(lidarCalibrationPath)==false)
+		throw runtime_error("Calibration file does not exist at work directory");
+
+	LidarMapper::parseConfiguration(configPath.string(), globalMapperParameters, localMapperParameters, worldToMap);
+
+	localMapperProc = shared_ptr<LocalMapper>(new LocalMapper(*this, localMapperParameters));
+	globalMapperProc = shared_ptr<GlobalMapper>(new GlobalMapper(*this, globalMapperParameters));
+
+	bagFd.open(bagpath, rosbag::bagmode::Read);
 	gnssBag = RandomAccessBag::Ptr(new RandomAccessBag(bagFd, "/nmea_sentence"));
 	lidarBag = LidarScanBag2::Ptr(
 		new LidarScanBag2(bagFd,
 			"/velodyne_packets",
 			ros::TIME_MIN,
 			ros::TIME_MAX,
-			lidarCalibrationFilePath,
-			localMapperParameters.min_scan_range));
+			lidarCalibrationPath.string(),
+			localMapperParameters.min_scan_range
+			));
 }
 
 
@@ -59,35 +71,17 @@ LidarMapper::build()
 	for (int i=0; i<bagsize; ++i) {
 
 		ptime messageTime;
-		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
+//		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
 		auto currentScan3 = lidarBag->getFiltered<pcl::PointXYZ>(i);
 
-		// XXX: Currently focused on local mapping
-		localMapperProc.feed(currentScan4, messageTime);
-		globalMapperProc.feed(currentScan3, messageTime);
+//		localMapperProc.feed(currentScan4, messageTime);
+		globalMapperProc->feed(currentScan3, messageTime);
+
+		cout << i+1 << '/' << bagsize << "      \r";
 	}
-}
 
-
-/*
- * Entry point to mapping process
- * XXX: to be deprecated
- */
-int
-LidarMapper::createMapFromBag(const string &bagpath, const std::string &configPath, const string &lidarCalibrationFilePath)
-{
-	GlobalMapper::Param globalParameters;
-	LocalMapper::Param localParameters;
-	TTransform worldToMapTransform;
-
-	LidarMapper::parseConfiguration(configPath, globalParameters, localParameters, worldToMapTransform);
-
-	LidarMapper lidarMapperInstance(globalParameters, localParameters, bagpath, lidarCalibrationFilePath);
-	lidarMapperInstance.worldToMap = worldToMapTransform;
-
-	lidarMapperInstance.build();
-
-	return 0;
+	// XXX: Temporary
+	globalMapperProc->vehicleTrack.dump("/tmp/ndt.csv");
 }
 
 
@@ -95,31 +89,9 @@ LidarMapper::createMapFromBag(const string &bagpath, const std::string &configPa
  * Entry point to the whole mapping process
  */
 int
-LidarMapper::createMapFromBag(const std::string &bagpath, const std::string &workingDirectory)
+LidarMapper::createMapFromBag(const std::string &bagpath, const std::string &workingDirectoryPath)
 {
-	GlobalMapper::Param globalParameters;
-	LocalMapper::Param localParameters;
-	TTransform worldToMapTransform;
-
-	path workDir(workingDirectory);
-	if (is_directory(workDir)==false)
-		throw runtime_error("Unable to open work directory");
-
-	path
-		configPath = workDir / ConfigurationFilename,
-		lidarCalibrationPath = workDir / LidarCalibrationFilename;
-
-	if (is_regular_file(configPath)==false)
-		throw runtime_error("Configuration file does not exist at work directory");
-	if (is_regular_file(lidarCalibrationPath)==false)
-		throw runtime_error("Calibration file does not exist at work directory");
-
-	LidarMapper::parseConfiguration(configPath.string(), globalParameters, localParameters, worldToMapTransform);
-
-	LidarMapper lidarMapperInstance(globalParameters, localParameters, bagpath, lidarCalibrationPath.string());
-	lidarMapperInstance.worldToMap = worldToMapTransform;
-	lidarMapperInstance.workDir = workDir;
-
+	LidarMapper lidarMapperInstance(bagpath, workingDirectoryPath);
 	lidarMapperInstance.build();
 
 	return 0;
