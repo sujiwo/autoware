@@ -39,6 +39,9 @@ void GlobalMapper::loadMap(const string &pcdFilename)
 	if (fReader.read(pcdFilename, *globalMap) != 0)
 		return;
 //		throw runtime_error("Unable to open map file: "+pcdFilename);
+	pcl::transformPointCloud(*globalMap, *globalMap, parent.worldToMap.matrix().cast<float>());
+	cout << "Initial Map loaded" << endl;
+
 	mNdt.setInputTarget(globalMap);
 }
 

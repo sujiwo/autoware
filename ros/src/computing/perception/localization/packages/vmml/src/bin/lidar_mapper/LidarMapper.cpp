@@ -50,6 +50,7 @@ LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::pa
 			lidarCalibrationPath.string(),
 			localMapperParameters.min_scan_range
 			));
+	cout << "Bag ready" << endl;
 }
 
 
