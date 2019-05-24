@@ -71,7 +71,7 @@ LidarMapper::build()
 	for (int i=0; i<bagsize; ++i) {
 
 		ptime messageTime;
-//		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
+		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
 		auto currentScan3 = lidarBag->getFiltered<pcl::PointXYZ>(i);
 
 //		localMapperProc.feed(currentScan4, messageTime);
@@ -82,6 +82,7 @@ LidarMapper::build()
 
 	// XXX: Temporary
 	globalMapperProc->vehicleTrack.dump("/tmp/ndt.csv");
+	gnssTrajectory.dump("/tmp/gnss.csv");
 }
 
 

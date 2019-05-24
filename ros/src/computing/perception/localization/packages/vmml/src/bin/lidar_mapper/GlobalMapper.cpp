@@ -51,7 +51,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 
 	// see if position is available in GNSS trajectory
 	Pose guessPose, currentPose;
-	if (currentScanId==0) {
+	if (currentScanId<=1) {
 		if (messageTime < parent.gnssTrajectory.front().timestamp) {
 			if (toSeconds(parent.gnssTrajectory.front().timestamp-messageTime) > 0.1)
 				return;
@@ -73,6 +73,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 	}
 
 	GlobalMapperCloud::Ptr output_cloud(new GlobalMapperCloud);
+	mNdt.setInputSource(newScan);
 	mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
 	Pose ndtPose = mNdt.getFinalTransformation().cast<double>();
 
@@ -90,8 +91,11 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 
 	// XXX: Calculate NDT reliability
 
+	lastDisplacement = previous_pose.inverse() * currentPose;
+
 	previous_pose = currentPose;
 	vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
+	currentScanId++;
 
 	return;
 }
