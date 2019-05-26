@@ -155,6 +155,9 @@ protected:
 		added_pose = TTransform::Identity();
 	TTransform
 		lastDisplacement = TTransform::Identity();
+	double
+		fitness_score,
+		transformation_probability;
 
 };	// LidarMapper::GlobalMapper
 

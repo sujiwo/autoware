@@ -54,7 +54,8 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 
 	// see if position is available in GNSS trajectory
 	Pose guessPose, currentPose;
-	if (currentScanId<=1) {
+
+	if (currentScanId<=1 or fitness_score >= 500.0) {
 		if (messageTime < parent.gnssTrajectory.front().timestamp) {
 			if (toSeconds(parent.gnssTrajectory.front().timestamp-messageTime) > 0.1)
 				return;
@@ -92,7 +93,12 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 
 	// velocity and acceleration not needed
 
-	// XXX: Calculate NDT reliability
+	// Calculate NDT reliability
+	fitness_score = mNdt.getFitnessScore();
+	transformation_probability = mNdt.getTransformationProbability();
+
+	// Logging
+//	cout << "F: " << fitness_score << "; T: " << transformation_probability << endl;
 
 	lastDisplacement = previous_pose.inverse() * currentPose;
 
