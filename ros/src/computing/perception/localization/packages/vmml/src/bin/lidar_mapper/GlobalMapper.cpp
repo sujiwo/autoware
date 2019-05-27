@@ -98,7 +98,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 	transformation_probability = mNdt.getTransformationProbability();
 
 	// Logging
-//	cout << "F: " << fitness_score << "; T: " << transformation_probability << endl;
+	cout << "F: " << fitness_score << "; T: " << transformation_probability << endl;
 
 	lastDisplacement = previous_pose.inverse() * currentPose;
 

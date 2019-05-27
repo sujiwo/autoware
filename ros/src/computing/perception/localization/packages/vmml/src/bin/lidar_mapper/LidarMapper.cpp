@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <thread>
 
 #include "LidarMapper.h"
 #include "inipp.h"
@@ -75,10 +76,18 @@ LidarMapper::build()
 		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
 		auto currentScan3 = lidarBag->getFiltered<pcl::PointXYZ>(i);
 
-//		localMapperProc.feed(currentScan4, messageTime);
-		globalMapperProc->feed(currentScan3, messageTime);
+		thread local ([&, this] {
+			localMapperProc->feed(currentScan4, messageTime);
+		});
 
-		cout << i+1 << '/' << bagsize << "      \r";
+		thread global ([&, this] {
+			globalMapperProc->feed(currentScan3, messageTime);
+		});
+
+		local.join();
+		global.join();
+
+		cout << i+1 << '/' << bagsize << "      \r" << flush;
 	}
 
 	// XXX: Temporary
