@@ -158,6 +158,8 @@ protected:
 	double
 		fitness_score,
 		transformation_probability;
+	int
+		num_iterations;
 
 };	// LidarMapper::GlobalMapper
 

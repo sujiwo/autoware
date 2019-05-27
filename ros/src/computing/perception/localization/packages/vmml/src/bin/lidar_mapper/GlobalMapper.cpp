@@ -96,6 +96,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 	// Calculate NDT reliability
 	fitness_score = mNdt.getFitnessScore();
 	transformation_probability = mNdt.getTransformationProbability();
+	num_iterations = mNdt.getFinalNumIteration();
 
 	// Logging
 	cout << "F: " << fitness_score << "; T: " << transformation_probability << endl;
