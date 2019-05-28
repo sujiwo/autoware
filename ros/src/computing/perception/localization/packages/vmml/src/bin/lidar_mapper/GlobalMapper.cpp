@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <cstdio>
 #include <pcl/io/pcd_io.h>
 
 #include "LidarMapper.h"
@@ -46,8 +47,11 @@ void GlobalMapper::loadMap(const string &pcdFilename)
 }
 
 
-void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messageTime)
+void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messageTime, int scanId)
 {
+	currentScanId = scanId;
+	current_gnss_pose = parent.getGnssPose(messageTime);
+
 	// Do nothing when prior map is not available
 	if (globalMap->empty()==true)
 		return;
@@ -55,18 +59,19 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 	// see if position is available in GNSS trajectory
 	Pose guessPose, currentPose;
 
-	if (currentScanId<=1 or fitness_score >= 500.0) {
-		if (messageTime < parent.gnssTrajectory.front().timestamp) {
-			if (toSeconds(parent.gnssTrajectory.front().timestamp-messageTime) > 0.1)
-				return;
-			guessPose = parent.gnssTrajectory.extrapolate(messageTime);
-		}
-		else if (messageTime > parent.gnssTrajectory.back().timestamp) {
+	if (scanId==parent.generalParams.startId) {
+		currentPose = current_gnss_pose;
+		previous_pose = current_gnss_pose;
+		vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
+		return;
+	}
 
-		}
-		else {
-			guessPose = parent.gnssTrajectory.interpolate(messageTime);
-		}
+	else if (scanId==parent.generalParams.startId+1) {
+		currentPose = current_gnss_pose;
+		lastDisplacement = previous_pose.inverse() * currentPose;
+		vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
+		previous_pose = currentPose;
+		return;
 	}
 
 	else {
@@ -99,16 +104,17 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 	num_iterations = mNdt.getFinalNumIteration();
 
 	// Logging
-	cout << "F: " << fitness_score << "; T: " << transformation_probability << endl;
+	printf("F: %f; T: %f; I: %d\n", fitness_score, transformation_probability, num_iterations);
 
 	lastDisplacement = previous_pose.inverse() * currentPose;
 
 	previous_pose = currentPose;
 	vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
-	currentScanId++;
 
 	return;
 }
+
+
 
 }	// namespace LidarMapper
 

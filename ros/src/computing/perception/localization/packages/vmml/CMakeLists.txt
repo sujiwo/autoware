@@ -207,6 +207,7 @@ add_executable(
 		src/bin/lidar_mapper/LidarMapper.cpp
 		src/bin/lidar_mapper/LocalMapper.cpp
 		src/bin/lidar_mapper/GlobalMapper.cpp
+		src/bin/lidar_mapper/TrajectoryLoop.cpp
 )
 
 target_link_libraries(

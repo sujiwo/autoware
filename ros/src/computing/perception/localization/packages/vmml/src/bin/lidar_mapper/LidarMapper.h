@@ -77,7 +77,7 @@ friend class LidarMapper;
 	typedef pcl::PointCloud<pcl::PointXYZI> LocalMapperCloud;
 
 	LocalMapper(LidarMapper &_parent, const Param &p);
-	void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime);
+	void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime, int scanId);
 	void outputCurrentSubmap();
 
 
@@ -93,7 +93,7 @@ protected:
 
 	// Counters
 	bool initial_scan_loaded = false;
-	uint64_t currentScanId = 0;
+	uint32_t currentScanId = 0;
 
 	LocalMapperCloud currentMap, currentSubmap;
 
@@ -108,7 +108,7 @@ protected:
 		lastDisplacement = TTransform::Identity(),
 		displacementFromOrigin = TTransform::Identity();
 	double submap_size = 0;
-	uint64_t submap_id = 0;
+	uint32_t submap_id = 0;
 	ptime submapOriginTimestamp;
 	Pose submapOriginPose;
 
@@ -138,19 +138,21 @@ public:
 
 	GlobalMapper(LidarMapper &_parent, const Param &p);
 	void loadMap(const std::string &point_cloud_map_filename);
-	void feed(GlobalMapperCloud::ConstPtr &newscan, const ptime &messageTime);
+	void feed(GlobalMapperCloud::ConstPtr &newscan, const ptime &messageTime, int scanId);
 
 protected:
 	Param param;
 	LidarMapper &parent;
-	uint64_t currentScanId = 0;
+	uint32_t currentScanId = 0;
 
 	GlobalMapperCloud::Ptr globalMap;
 	pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
 	Trajectory vehicleTrack;
 
 	// States
+	bool init_pose_set = false;
 	Pose
+		current_gnss_pose, previous_gnss_pose,
 		previous_pose = TTransform::Identity(),
 		added_pose = TTransform::Identity();
 	TTransform
@@ -168,6 +170,10 @@ protected:
 class LidarMapper {
 public:
 
+	struct Param {
+		int startId, stopId;
+	};
+
 	friend class GlobalMapper;
 	friend class LocalMapper;
 
@@ -180,11 +186,17 @@ public:
 
 	static int createMapFromBag(const std::string &bagpath, const std::string &workingDirectory);
 
-	static void parseConfiguration(const std::string &configPath, GlobalMapper::Param &g, LocalMapper::Param &l, TTransform &worldToMap);
+	static void parseConfiguration(
+		const std::string &configPath,
+		GlobalMapper::Param &g,
+		LocalMapper::Param &l,
+		TTransform &worldToMap,
+		LidarMapper::Param &generalParams);
 
 protected:
 	GlobalMapper::Param globalMapperParameters;
 	LocalMapper::Param localMapperParameters;
+	Param generalParams;
 
 	std::shared_ptr<LocalMapper> localMapperProc;
 	std::shared_ptr<GlobalMapper> globalMapperProc;
@@ -199,6 +211,10 @@ protected:
 	LidarScanBag2::Ptr lidarBag;
 
 	boost::filesystem::path workDir;
+
+	PoseStamped getGnssPose(const ptime &t) const;
+
+	void detectLoopInGnssTrajectory(std::vector<std::pair<uint32_t,uint32_t>> &) const;
 };
 
 } // LidarMapper

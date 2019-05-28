@@ -34,15 +34,22 @@ LocalMapper::LocalMapper(LidarMapper &_parent, const LocalMapper::Param &p):
 
 	mVoxelGridFilter.setLeafSize(param.voxel_leaf_size, param.voxel_leaf_size, param.voxel_leaf_size);
 
+	auto submapsDir = parent.workDir / "submaps";
+	if (!boost::filesystem::exists(submapsDir)) {
+		boost::filesystem::create_directory(submapsDir);
+	}
+	else if (!boost::filesystem::is_directory(submapsDir))
+		throw runtime_error("Not a directory: "+submapsDir.string());
 }
 
 
 void
-LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
+LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, int scanId)
 {
 	ScanProcessLog feedResult;
 
 	current_scan_time = messageTime;
+	currentScanId = scanId;
 
 	// Add initial point cloud to velodyne_map
 	if (initial_scan_loaded==false) {
@@ -121,15 +128,13 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime)
 	// XXX: Put logging here
 	feedResult.fitness_score = mNdt.getFitnessScore();
 	feedResult.num_of_iteration = mNdt.getFinalNumIteration();
-
-	// End
-	currentScanId += 1;
 }
 
 
 void LocalMapper::outputCurrentSubmap()
 {
-	auto submapPath = parent.workDir / generateSubmapPcdName();
+	auto submapPath = parent.workDir / "submaps";
+	submapPath /= generateSubmapPcdName();
 	cerr << "Outputting submap: " << submapPath.string() << endl;
 	pcl::io::savePCDFileBinary(submapPath.string(), currentSubmap);
 }

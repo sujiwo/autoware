@@ -15,8 +15,9 @@ void
 TrajectoryLoop::push_back(const PoseStamped &pt)
 {
 	Trajectory::push_back(pt);
-
+	uint32_t i = size()-1;
 	// find loops
 
 	// Insert to tree
+//	positionLookups.
 }

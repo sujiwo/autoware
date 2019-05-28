@@ -36,7 +36,7 @@ LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::pa
 	if (is_regular_file(lidarCalibrationPath)==false)
 		throw runtime_error("Calibration file does not exist at work directory");
 
-	LidarMapper::parseConfiguration(configPath.string(), globalMapperParameters, localMapperParameters, worldToMap);
+	LidarMapper::parseConfiguration(configPath.string(), globalMapperParameters, localMapperParameters, worldToMap, generalParams);
 
 	localMapperProc = shared_ptr<LocalMapper>(new LocalMapper(*this, localMapperParameters));
 	globalMapperProc = shared_ptr<GlobalMapper>(new GlobalMapper(*this, globalMapperParameters));
@@ -52,6 +52,12 @@ LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::pa
 			localMapperParameters.min_scan_range
 			));
 	cout << "Bag ready" << endl;
+
+	if (generalParams.startId<1)
+		throw runtime_error("Invalid start scan id in configuration");
+	generalParams.startId -= 1;
+	if (generalParams.stopId==-1)
+		generalParams.stopId = lidarBag->size();
 }
 
 
@@ -69,30 +75,29 @@ LidarMapper::build()
 	// Build GNSS Trajectory
 	createTrajectoryFromGnssBag(*gnssBag, gnssTrajectory, 7, worldToMap);
 
-	const int bagsize = lidarBag->size();
-	for (int i=0; i<bagsize; ++i) {
+	for (int i=generalParams.startId; i<generalParams.stopId; ++i) {
 
 		ptime messageTime;
 		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
 		auto currentScan3 = lidarBag->getFiltered<pcl::PointXYZ>(i);
 
 		thread local ([&, this] {
-			localMapperProc->feed(currentScan4, messageTime);
+			localMapperProc->feed(currentScan4, messageTime, i);
 		});
 
 		thread global ([&, this] {
-			globalMapperProc->feed(currentScan3, messageTime);
+			globalMapperProc->feed(currentScan3, messageTime, i);
 		});
 
 		local.join();
 		global.join();
 
-		cout << i+1 << '/' << bagsize << "      \r" << flush;
+		cout << i+1 << '/' << generalParams.stopId << "      \r" << flush;
 	}
 
 	// XXX: Temporary
-	globalMapperProc->vehicleTrack.dump("/tmp/ndt.csv");
-	gnssTrajectory.dump("/tmp/gnss.csv");
+	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
+	gnssTrajectory.dump((workDir / "gnss.csv").string());
 }
 
 
@@ -110,7 +115,12 @@ LidarMapper::createMapFromBag(const std::string &bagpath, const std::string &wor
 
 
 void
-LidarMapper::parseConfiguration(const std::string &configPath, GlobalMapper::Param &g, LocalMapper::Param &l, TTransform &worldToMap)
+LidarMapper::parseConfiguration(
+	const std::string &configPath,
+	GlobalMapper::Param &g,
+	LocalMapper::Param &l,
+	TTransform &worldToMap,
+	LidarMapper::Param &gen)
 {
 	std::ifstream configFile(configPath);
 	inipp::Ini<char> ini;
@@ -140,7 +150,22 @@ LidarMapper::parseConfiguration(const std::string &configPath, GlobalMapper::Par
 	inipp::extract(ini.sections["GNSS"]["yaw"], oWorldToMapTf.z());
 	worldToMap = TTransform::from_XYZ_RPY(vWorldToMapTf, oWorldToMapTf.x(), oWorldToMapTf.y(), oWorldToMapTf.z());
 
+	inipp::extract(ini.sections["General"]["start"], gen.startId);
+	inipp::extract(ini.sections["General"]["stop"], gen.stopId);
+
 	return;
+}
+
+
+PoseStamped
+LidarMapper::getGnssPose(const ptime &t) const
+{
+	if (t < gnssTrajectory.front().timestamp or t > gnssTrajectory.back().timestamp) {
+		return gnssTrajectory.extrapolate(t);
+	}
+	else {
+		return gnssTrajectory.interpolate(t);
+	}
 }
 
 
