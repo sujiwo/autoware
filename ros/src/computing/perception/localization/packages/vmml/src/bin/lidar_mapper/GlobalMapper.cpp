@@ -16,7 +16,7 @@ using namespace std;
 
 namespace LidarMapper {
 
-const double PREDICT_POSE_THRESHOLD = 0.5;
+const double PREDICT_POSE_THRESHOLD = 2.5;
 
 
 GlobalMapper::GlobalMapper(LidarMapper &_parent, const GlobalMapper::Param &p) :
