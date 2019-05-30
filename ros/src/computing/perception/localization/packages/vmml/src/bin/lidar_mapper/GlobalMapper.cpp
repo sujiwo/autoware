@@ -74,6 +74,10 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 		return;
 	}
 
+	else if (fitness_score>=500.0) {
+		guessPose = current_gnss_pose;
+	}
+
 	else {
 		// Guess Pose from last displacement
 		Vector3d rot = quaternionToRPY(lastDisplacement.orientation());
