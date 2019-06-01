@@ -201,7 +201,7 @@ void createTrajectoryFromGnssBag (RandomAccessBag &bagsrc, Trajectory &trajector
 		}
 	}
 
-	cout << "\nDone\n";
+	cout << "\nDone GNSS Trajectory generation\n";
 }
 
 

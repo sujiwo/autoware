@@ -53,11 +53,27 @@ LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::pa
 			));
 	cout << "Bag ready" << endl;
 
-	if (generalParams.startId<1)
-		throw runtime_error("Invalid start scan id in configuration");
-	generalParams.startId -= 1;
-	if (generalParams.stopId==-1)
+	if (generalParams.startInp.asSecondsFromStart!=-1) {
+		generalParams.startId = lidarBag->getPositionAtDurationSecond(generalParams.startInp.asSecondsFromStart);
+	}
+	else if (generalParams.startInp.asPosition!=-1) {
+		generalParams.startId = generalParams.startInp.asPosition;
+	}
+	else {
+		generalParams.startId = 0;
+	}
+
+	if (generalParams.stopInp.asSecondsFromStart!=-1) {
+		generalParams.stopId = lidarBag->getPositionAtDurationSecond(generalParams.stopInp.asSecondsFromStart);
+	}
+	else if (generalParams.stopInp.asPosition!=-1) {
+		generalParams.stopId = generalParams.stopInp.asPosition;
+	}
+	else if (generalParams.stopInp.asPosition==-1 and generalParams.stopInp.asSecondsFromStart==-1) {
 		generalParams.stopId = lidarBag->size();
+	}
+
+	cout << "Sequence ID: " << generalParams.startId << "->" << generalParams.stopId << endl;
 }
 
 
@@ -74,8 +90,13 @@ LidarMapper::build()
 {
 	// Build GNSS Trajectory
 	createTrajectoryFromGnssBag(*gnssBag, gnssTrajectory, 7, worldToMap);
+	// For debugging
+	auto gnssSubsetTrack =
+		gnssTrajectory.subset(lidarBag->timeAt(generalParams.startId).toBoost(), lidarBag->timeAt(generalParams.stopId-1).toBoost());
+	gnssTrajectory.dump((workDir / "gnss-full.csv").string());
+	gnssSubsetTrack.dump((workDir / "gnss.csv").string());
 
-	for (int i=generalParams.startId; i<generalParams.stopId; ++i) {
+	for (int i=generalParams.startId, c=0; i<generalParams.stopId; ++i, ++c) {
 
 		ptime messageTime;
 		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
@@ -92,12 +113,11 @@ LidarMapper::build()
 		local.join();
 		global.join();
 
-		cout << i+1 << '/' << generalParams.stopId << "      \r" << flush;
+		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
 	}
 
 	// XXX: Temporary
 	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
-	gnssTrajectory.dump((workDir / "gnss.csv").string());
 }
 
 
@@ -150,10 +170,33 @@ LidarMapper::parseConfiguration(
 	inipp::extract(ini.sections["GNSS"]["yaw"], oWorldToMapTf.z());
 	worldToMap = TTransform::from_XYZ_RPY(vWorldToMapTf, oWorldToMapTf.x(), oWorldToMapTf.y(), oWorldToMapTf.z());
 
-	inipp::extract(ini.sections["General"]["start"], gen.startId);
-	inipp::extract(ini.sections["General"]["stop"], gen.stopId);
+	// XXX: Make this code to handle start/stop time, not just sequence number
+	string startIdstr, stopIdstr;
+	inipp::extract(ini.sections["General"]["start"], startIdstr);
+	inipp::extract(ini.sections["General"]["stop"], stopIdstr);
+
+	gen.startInp = InputOffsetPosition::parseString(startIdstr);
+	gen.stopInp = InputOffsetPosition::parseString(stopIdstr);
+
+	// If not, take them as integers
+//	inipp::extract(ini.sections["General"]["start"], gen.startId);
+//	inipp::extract(ini.sections["General"]["stop"], gen.stopId);
 
 	return;
+}
+
+
+InputOffsetPosition
+InputOffsetPosition::parseString(const std::string &s)
+{
+	InputOffsetPosition inp;
+	if (s.find('.') != std::string::npos) {
+		inp.asSecondsFromStart = stod(s);
+	}
+	else {
+		inp.asPosition = stoi(s);
+	}
+	return inp;
 }
 
 

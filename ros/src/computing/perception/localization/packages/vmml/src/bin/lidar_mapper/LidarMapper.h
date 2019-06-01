@@ -37,6 +37,17 @@ const std::string
 class LidarMapper;
 
 
+struct InputOffsetPosition {
+	double asSecondsFromStart = -1;
+	int64_t asPosition = -1;
+
+	static InputOffsetPosition
+	parseString(const std::string &s);
+
+};
+
+
+
 class LocalMapper {
 public:
 
@@ -171,6 +182,9 @@ class LidarMapper {
 public:
 
 	struct Param {
+		// To be filled by configuration parser
+		InputOffsetPosition startInp, stopInp;
+		// To be filled after the bag is open
 		int startId, stopId;
 	};
 
