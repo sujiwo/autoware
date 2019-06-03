@@ -123,6 +123,8 @@ protected:
 	ptime submapOriginTimestamp;
 	Pose submapOriginPose;
 
+	Trajectory localMapTrack;
+
 	std::string generateSubmapPcdName();
 
 };	// LidarMapper::LocalMapper

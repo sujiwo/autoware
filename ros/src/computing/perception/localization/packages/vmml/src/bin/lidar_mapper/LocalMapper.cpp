@@ -126,6 +126,7 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	}
 
 	// XXX: Put logging here
+	localMapTrack.push_back(PoseStamped(current_pose, messageTime));
 	feedResult.fitness_score = mNdt.getFitnessScore();
 	feedResult.num_of_iteration = mNdt.getFinalNumIteration();
 }
