@@ -1,0 +1,15 @@
+Offline Lidar Mapper
+
+Procedures:
+1. Create a working directory
+2. Populate the working directory with following files:
+   - Configuration file (lidar_mapper.ini). Please edit this file before running
+   - Lidar calibration file (calibration.yaml)
+   - Initial point cloud map (global_map.pcd) if available
+3. Run the following command:
+   $ rosrun vmml lidar_mapper <bag file name> <work directory>
+4. At current state, lidar_mapper will output the following files in working directory:
+   - gnss.csv
+   - ndt.csv
+   - Submap sequence 
+   
