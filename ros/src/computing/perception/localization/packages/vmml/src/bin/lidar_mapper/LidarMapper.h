@@ -192,6 +192,7 @@ public:
 
 	friend class GlobalMapper;
 	friend class LocalMapper;
+	friend class ScanOdometry;
 
 	LidarMapper(const std::string &bagpath, const boost::filesystem::path &myWorkDir);
 	virtual ~LidarMapper();
