@@ -9,6 +9,8 @@
 #define _LIDARMAPPER_H_
 
 #include <string>
+#include <deque>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -24,6 +26,7 @@
 #include "datasets/MeidaiBagDataset.h"
 #include "datasets/LidarScanBag2.h"
 
+#include "ScanFrame.h"
 
 namespace LidarMapper {
 
@@ -122,6 +125,7 @@ protected:
 	uint32_t submap_id = 0;
 	ptime submapOriginTimestamp;
 	Pose submapOriginPose;
+	double accum_distance = 0.0;
 
 	Trajectory localMapTrack;
 
@@ -229,9 +233,16 @@ protected:
 
 	boost::filesystem::path workDir;
 
+	// List of scanframes
+	std::deque<ScanFrame::Ptr> scanFrameQueue;
+	std::deque<ScanFrame::Ptr> new_scanFrames;
+	std::vector<ScanFrame::Ptr> scanFrames;
+
 	PoseStamped getGnssPose(const ptime &t) const;
 
 	void detectLoopInGnssTrajectory(std::vector<std::pair<uint32_t,uint32_t>> &) const;
+
+	void addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance);
 };
 
 } // LidarMapper

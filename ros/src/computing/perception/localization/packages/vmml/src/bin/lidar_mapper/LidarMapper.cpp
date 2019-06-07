@@ -113,6 +113,9 @@ LidarMapper::build()
 		local.join();
 		global.join();
 
+		// Try to find loop at this point
+		//
+
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
 	}
 
@@ -209,6 +212,16 @@ LidarMapper::getGnssPose(const ptime &t) const
 	else {
 		return gnssTrajectory.interpolate(t);
 	}
+}
+
+
+void
+LidarMapper::addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance)
+{
+	Pose gnssPose = getGnssPose(timestamp);
+	ScanFrame::Ptr scanfr(new ScanFrame(bId, timestamp, odom, gnssPose, accum_distance));
+	// G2O node will be computed later
+	scanFrameQueue.push_back(scanfr);
 }
 
 

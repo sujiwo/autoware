@@ -46,6 +46,7 @@ LocalMapper::LocalMapper(LidarMapper &_parent, const LocalMapper::Param &p):
 void
 LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, int scanId)
 {
+	bool addNewFrame = false;
 	ScanProcessLog feedResult;
 
 	current_scan_time = messageTime;
@@ -97,18 +98,25 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	// Calculate the displacement (or offset) (current_pose - previous_pose)
 	lastDisplacement = previous_pose.inverse() * current_pose;
 
-	// Update position
-	previous_pose = current_pose;
-
 	// Calculate shift (in X-Y plane only)
 	double shift = Vector2d(current_pose.x()-added_pose.x(), current_pose.y()-added_pose.y()).norm();
+	// Update the map when horizontal shift is larger than minimum range
 	if (shift >= param.min_add_scan_shift) {
+
+		// add to pose graph
+		accum_distance = lastDisplacement.translation().norm();
+		parent.addNewScanFrame(scanId, messageTime, current_pose, accum_distance);
+
 		submap_size += shift;
 		currentMap += *transformed_scan_ptr;
 		currentSubmap += *transformed_scan_ptr;
 		added_pose = current_pose;
 		isMapUpdate = true;
+		addNewFrame = true;
 	}
+
+	// Update position
+	previous_pose = current_pose;
 
 	// Output submap file after a certain threshold
 	if (submap_size >= param.max_submap_size) {
@@ -123,6 +131,10 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 
 		submap_id++;
 		hasSubmapIdIncremented = true;
+	}
+
+	if (addNewFrame==true) {
+
 	}
 
 	// XXX: Put logging here

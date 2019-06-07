@@ -10,13 +10,5 @@
 
 namespace LidarMapper {
 
-ScanFrame::ScanFrame() {
-	// TODO Auto-generated constructor stub
-
-}
-
-ScanFrame::~ScanFrame() {
-	// TODO Auto-generated destructor stub
-}
 
 } // namespace LidarMapper
