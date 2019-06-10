@@ -123,6 +123,7 @@ LidarMapper::build()
 		// Check if we need to kick off Pose Graph Optimization
 		if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger) {
 			cout << "Optimization started" << endl;
+			flushScanQueue();
 
 		}
 
@@ -182,8 +183,9 @@ LidarMapper::parseConfiguration(
 	inipp::extract(ini.sections["GNSS"]["pitch"], oWorldToMapTf.y());
 	inipp::extract(ini.sections["GNSS"]["yaw"], oWorldToMapTf.z());
 	worldToMap = TTransform::from_XYZ_RPY(vWorldToMapTf, oWorldToMapTf.x(), oWorldToMapTf.y(), oWorldToMapTf.z());
+	inipp::extract(ini.sections["GNSS"]["stddev_horizontal"], gen.gnss_stddev_horizontal);
+	inipp::extract(ini.sections["GNSS"]["stddev_vertical"], gen.gnss_stddev_vertical);
 
-	// XXX: Make this code to handle start/stop time, not just sequence number
 	string startIdstr, stopIdstr;
 	inipp::extract(ini.sections["General"]["start"], startIdstr);
 	inipp::extract(ini.sections["General"]["stop"], stopIdstr);
@@ -192,10 +194,6 @@ LidarMapper::parseConfiguration(
 	gen.stopInp = InputOffsetPosition::parseString(stopIdstr);
 
 	inipp::extract(ini.sections["General"]["optimization_distance_trigger"], gen.optimization_distance_trigger);
-
-	// If not, take them as integers
-//	inipp::extract(ini.sections["General"]["start"], gen.startId);
-//	inipp::extract(ini.sections["General"]["stop"], gen.stopId);
 
 	return;
 }
@@ -231,10 +229,24 @@ void
 LidarMapper::addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance)
 {
 	Pose gnssPose = getGnssPose(timestamp);
-	ScanFrame::Ptr scanfr(new ScanFrame(bId, timestamp, odom, gnssPose, accum_distance));
+	auto scanfr = ScanFrame::create(bId, timestamp, odom, gnssPose, accum_distance);
 	// G2O node will be computed later
 	scanFrameQueue.push_back(scanfr);
 	elapsed_distance_for_optimization += accum_distance;
+}
+
+
+void
+LidarMapper::flushScanQueue()
+{
+	if (scanFrameQueue.empty())
+		return;
+
+	for (auto &frame: scanFrameQueue) {
+		graph->addScanFrame(frame);
+	}
+
+	scanFrameQueue.clear();
 }
 
 

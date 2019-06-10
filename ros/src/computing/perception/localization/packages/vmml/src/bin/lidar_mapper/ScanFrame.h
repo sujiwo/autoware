@@ -30,6 +30,9 @@ struct ScanFrame {
 		accum_distance(ad)
 	{}
 
+	inline static Ptr create(int64_t i, const ptime &t, const Pose &localPose, const Pose &gps, double ad)
+	{ return Ptr(new ScanFrame(i, t, localPose, gps, ad)); }
+
 	ptime timestamp;
 //	pcl::PointCloud<pcl::PointXYZI>::ConstPtr scan;
 	Pose odometry;				// Supplied by local mapper
@@ -40,6 +43,7 @@ struct ScanFrame {
 	int64_t bagId;
 
 	g2o::VertexSE3* node=nullptr;		// node instance
+
 };
 
 }

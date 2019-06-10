@@ -332,6 +332,14 @@ struct TTransform : public Eigen::Affine3d
 	inline const Eigen::Vector3d operator * (const Eigen::Vector3d &V) const
 	{ return Eigen::Affine3d::operator*(V); }
 
+	inline Eigen::Isometry3d toIsometry() const
+	{
+		Eigen::Isometry3d m;
+		m.translation() = translation();
+		m.linear() = rotation();
+		return m;
+	}
+
 /*
 	TTransform operator / (const tduration &td) const
 	{ return *this / toSeconds(td); }

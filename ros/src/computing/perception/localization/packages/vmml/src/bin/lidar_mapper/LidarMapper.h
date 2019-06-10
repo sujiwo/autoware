@@ -194,6 +194,10 @@ public:
 		// To be filled after the bag is open
 		int startId, stopId;
 		double optimization_distance_trigger;
+		// Actually related to GNSS
+		double
+			gnss_stddev_horizontal,
+			gnss_stddev_vertical;
 	};
 
 	friend class GlobalMapper;
@@ -217,6 +221,11 @@ public:
 		TTransform &worldToMap,
 		LidarMapper::Param &generalParams);
 
+	PoseStamped getGnssPose(const ptime &t) const;
+
+	const Param& getParams() const
+	{ return generalParams; }
+
 protected:
 	GlobalMapper::Param globalMapperParameters;
 	LocalMapper::Param localMapperParameters;
@@ -239,7 +248,6 @@ protected:
 	// List of scanframes
 	std::deque<ScanFrame::Ptr> scanFrameQueue;
 	std::deque<ScanFrame::Ptr> new_scanFrames;
-	std::vector<ScanFrame::Ptr> scanFrames;
 
 	PoseGraph::Ptr graph;
 	LoopDetector::Ptr loopDetector;
@@ -247,11 +255,10 @@ protected:
 	// States
 	double elapsed_distance_for_optimization = 0.0;
 
-	PoseStamped getGnssPose(const ptime &t) const;
-
 	void detectLoopInGnssTrajectory(std::vector<std::pair<uint32_t,uint32_t>> &) const;
 
 	void addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance);
+	void flushScanQueue();
 };
 
 } // LidarMapper
