@@ -14,12 +14,13 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <pcl_omp_registration/ndt.h>
 #include <pcl/registration/ndt.h>
 #include <pcl/filters/voxel_grid.h>
 
 #include <boost/filesystem.hpp>
 
+#include "PoseGraph.h"
+#include "LoopDetector.h"
 #include "utilities.h"
 #include "Trajectory.h"
 #include "RandomAccessBag.h"
@@ -192,11 +193,13 @@ public:
 		InputOffsetPosition startInp, stopInp;
 		// To be filled after the bag is open
 		int startId, stopId;
+		double optimization_distance_trigger;
 	};
 
 	friend class GlobalMapper;
 	friend class LocalMapper;
 	friend class ScanOdometry;
+	friend class LoopDetector;
 
 	LidarMapper(const std::string &bagpath, const boost::filesystem::path &myWorkDir);
 	virtual ~LidarMapper();
@@ -237,6 +240,12 @@ protected:
 	std::deque<ScanFrame::Ptr> scanFrameQueue;
 	std::deque<ScanFrame::Ptr> new_scanFrames;
 	std::vector<ScanFrame::Ptr> scanFrames;
+
+	PoseGraph::Ptr graph;
+	LoopDetector::Ptr loopDetector;
+
+	// States
+	double elapsed_distance_for_optimization = 0.0;
 
 	PoseStamped getGnssPose(const ptime &t) const;
 

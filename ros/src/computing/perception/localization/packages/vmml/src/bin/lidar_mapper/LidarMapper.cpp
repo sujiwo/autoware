@@ -74,6 +74,10 @@ LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::pa
 	}
 
 	cout << "Sequence ID: " << generalParams.startId << "->" << generalParams.stopId << endl;
+
+	// Other important objects
+	graph = PoseGraph::Ptr(new PoseGraph(*this));
+	loopDetector = LoopDetector::Ptr(new LoopDetector(*this));
 }
 
 
@@ -115,6 +119,12 @@ LidarMapper::build()
 
 		// Try to find loop at this point
 		//
+
+		// Check if we need to kick off Pose Graph Optimization
+		if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger) {
+			cout << "Optimization started" << endl;
+
+		}
 
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
 	}
@@ -181,6 +191,8 @@ LidarMapper::parseConfiguration(
 	gen.startInp = InputOffsetPosition::parseString(startIdstr);
 	gen.stopInp = InputOffsetPosition::parseString(stopIdstr);
 
+	inipp::extract(ini.sections["General"]["optimization_distance_trigger"], gen.optimization_distance_trigger);
+
 	// If not, take them as integers
 //	inipp::extract(ini.sections["General"]["start"], gen.startId);
 //	inipp::extract(ini.sections["General"]["stop"], gen.stopId);
@@ -222,6 +234,7 @@ LidarMapper::addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double acc
 	ScanFrame::Ptr scanfr(new ScanFrame(bId, timestamp, odom, gnssPose, accum_distance));
 	// G2O node will be computed later
 	scanFrameQueue.push_back(scanfr);
+	elapsed_distance_for_optimization += accum_distance;
 }
 
 

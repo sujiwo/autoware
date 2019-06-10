@@ -104,7 +104,7 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	if (shift >= param.min_add_scan_shift) {
 
 		// add to pose graph
-		accum_distance = lastDisplacement.translation().norm();
+		accum_distance += lastDisplacement.translation().norm();
 		parent.addNewScanFrame(scanId, messageTime, current_pose, accum_distance);
 
 		submap_size += shift;
