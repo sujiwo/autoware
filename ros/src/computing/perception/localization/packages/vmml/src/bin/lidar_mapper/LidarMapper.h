@@ -193,7 +193,14 @@ public:
 		InputOffsetPosition startInp, stopInp;
 		// To be filled after the bag is open
 		int startId, stopId;
-		double optimization_distance_trigger;
+
+		// For loop detection
+		double
+			optimization_distance_trigger,
+			min_edge_interval,
+			accum_distance_thresh,
+			max_loop_distance;
+
 		// Actually related to GNSS
 		double
 			gnss_stddev_horizontal,

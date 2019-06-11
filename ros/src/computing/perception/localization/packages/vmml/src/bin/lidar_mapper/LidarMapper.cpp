@@ -117,13 +117,13 @@ LidarMapper::build()
 		local.join();
 		global.join();
 
-		// Try to find loop at this point
-		//
-
 		// Check if we need to kick off Pose Graph Optimization
 		if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger) {
 			cout << "Optimization started" << endl;
 			flushScanQueue();
+
+			// Try to find loop at this point
+			auto loops = loopDetector->detect(graph->getFrameList(), scanFrameQueue);
 
 			elapsed_distance_for_optimization = 0.0;
 		}
@@ -195,6 +195,9 @@ LidarMapper::parseConfiguration(
 	gen.stopInp = InputOffsetPosition::parseString(stopIdstr);
 
 	inipp::extract(ini.sections["General"]["optimization_distance_trigger"], gen.optimization_distance_trigger);
+	inipp::extract(ini.sections["General"]["min_edge_interval"], gen.min_edge_interval);
+	inipp::extract(ini.sections["General"]["accum_distance_thresh"], gen.accum_distance_thresh);
+	inipp::extract(ini.sections["General"]["max_loop_distance"], gen.max_loop_distance);
 
 	return;
 }

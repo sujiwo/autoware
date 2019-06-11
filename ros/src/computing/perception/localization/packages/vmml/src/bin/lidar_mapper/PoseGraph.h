@@ -57,6 +57,9 @@ public:
 
 	bool addScanFrame(ScanFrame::Ptr &f);
 
+	const std::vector<ScanFrame::Ptr>& getFrameList() const
+	{ return frameList; }
+
 protected:
 	LidarMapper &parent;
 
