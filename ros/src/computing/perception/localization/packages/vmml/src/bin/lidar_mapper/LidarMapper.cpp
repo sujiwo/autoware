@@ -121,11 +121,6 @@ LidarMapper::build()
 		if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger) {
 			cout << "Optimization started" << endl;
 			flushScanQueue();
-
-			// Try to find loop at this point
-			auto loops = loopDetector->detect(graph->getFrameList(), scanFrameQueue);
-
-			elapsed_distance_for_optimization = 0.0;
 		}
 
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
@@ -249,6 +244,13 @@ LidarMapper::flushScanQueue()
 	for (auto &frame: scanFrameQueue) {
 		graph->addScanFrame(frame);
 	}
+
+	// Try to find loop at this point
+	auto loopEvent = loopDetector->detect(graph->getFrameList(), scanFrameQueue);
+	for (auto &loop: loopEvent) {
+		// XXX: Unfinished
+	}
+	elapsed_distance_for_optimization = 0.0;
 
 	scanFrameQueue.clear();
 }

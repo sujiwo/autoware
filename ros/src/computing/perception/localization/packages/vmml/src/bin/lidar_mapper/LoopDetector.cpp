@@ -17,6 +17,9 @@ using namespace std;
 typedef pcl::PointXYZI PointT;
 
 
+const double fitness_score_threshold = 0.5;
+
+
 namespace LidarMapper {
 
 LoopDetector::LoopDetector(LidarMapper &p):
@@ -65,9 +68,17 @@ LoopDetector::detect(
 const std::vector<ScanFrame::Ptr> &keyframes,
 const std::deque<ScanFrame::Ptr> &new_keyframes)
 {
+	vector<Loop::Ptr> detectedLoops;
+
 	for (const auto &nk: new_keyframes) {
 		auto candidates = findCandidates(keyframes, nk);
+		auto loop = validate(candidates, nk);
+		if (loop) {
+			detectedLoops.push_back(loop);
+		}
 	}
+
+	return detectedLoops;
 }
 
 
@@ -75,8 +86,8 @@ Loop::Ptr
 LoopDetector::validate(const std::vector<ScanFrame::Ptr> &candidateList, const ScanFrame::Ptr &newScanFrame)
 {
 	// Re-read point cloud from bag
-	auto cloud2 = parent.lidarBag->getFiltered<PointT>(newScanFrame->bagId);
-	matcher.setInputTarget(cloud2);
+	auto cloud1 = parent.lidarBag->getFiltered<PointT>(newScanFrame->bagId);
+	matcher.setInputTarget(cloud1);
 
 	pcl::PointCloud<PointT> aligned;
 	double best_score = numeric_limits<double>::max();
@@ -84,8 +95,8 @@ LoopDetector::validate(const std::vector<ScanFrame::Ptr> &candidateList, const S
 	TTransform relativePose;
 
 	for (auto &candidate: candidateList) {
-		auto cloud1 = parent.lidarBag->getFiltered<PointT>(candidate->bagId);
-		matcher.setInputSource(cloud1);
+		auto cloud2 = parent.lidarBag->getFiltered<PointT>(candidate->bagId);
+		matcher.setInputSource(cloud2);
 		Eigen::Matrix4f guess = (newScanFrame->node->estimate().inverse() * candidate->node->estimate()) .matrix().cast<float>();
 		matcher.align(aligned, guess);
 
@@ -100,7 +111,16 @@ LoopDetector::validate(const std::vector<ScanFrame::Ptr> &candidateList, const S
 		relativePose = matcher.getFinalTransformation();
 	}
 
-	return nullptr;
+	if (best_score > fitness_score_threshold) {
+		cout << "Loop not found" << endl;
+		return nullptr;
+	}
+	else {
+		cout << "Loop found" << endl;
+		lastAccumDistance = newScanFrame->accum_distance;
+	}
+
+	return make_shared<Loop>(newScanFrame, bestMatch, relativePose);
 }
 
 
