@@ -23,11 +23,7 @@
 #include <g2o/types/slam3d/types_slam3d.h>
 #include <g2o/types/slam3d/edge_se3_pointxyz.h>
 #include <g2o/types/slam3d_addons/types_slam3d_addons.h>
-//#include <g2o/edge_se3_plane.hpp>
-//#include <g2o/edge_se3_priorxy.hpp>
-//#include <g2o/edge_se3_priorxyz.hpp>
-//#include <g2o/edge_se3_priorvec.hpp>
-//#include <g2o/edge_se3_priorquat.hpp>
+
 
 #include "ScanFrame.h"
 #include "g2o_types/edge_se3_priorxyz.hpp"
@@ -38,6 +34,9 @@ namespace LidarMapper {
 class LidarMapper;
 
 
+/*
+ * Abstraction of G2O Optimization graph
+ */
 class PoseGraph {
 
 friend class LidarMapper;

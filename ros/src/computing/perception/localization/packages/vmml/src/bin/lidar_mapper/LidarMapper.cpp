@@ -125,6 +125,7 @@ LidarMapper::build()
 			cout << "Optimization started" << endl;
 			flushScanQueue();
 
+			elapsed_distance_for_optimization = 0.0;
 		}
 
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
