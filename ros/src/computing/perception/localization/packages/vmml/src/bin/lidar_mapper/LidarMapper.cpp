@@ -10,7 +10,6 @@
 #include <thread>
 
 #include "LidarMapper.h"
-#include "inipp.h"
 
 
 using namespace std;
@@ -36,7 +35,13 @@ LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::pa
 	if (is_regular_file(lidarCalibrationPath)==false)
 		throw runtime_error("Calibration file does not exist at work directory");
 
-	LidarMapper::parseConfiguration(configPath.string(), globalMapperParameters, localMapperParameters, worldToMap, generalParams);
+	LidarMapper::parseConfiguration(
+		configPath.string(),
+		globalMapperParameters,
+		localMapperParameters,
+		worldToMap,
+		generalParams,
+		rootConfiguration);
 
 	localMapperProc = shared_ptr<LocalMapper>(new LocalMapper(*this, localMapperParameters));
 	globalMapperProc = shared_ptr<GlobalMapper>(new GlobalMapper(*this, globalMapperParameters));
@@ -115,6 +120,8 @@ LidarMapper::build()
 		if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger) {
 			cout << "Optimization started" << endl;
 			flushScanQueue();
+			// XXX: Check
+			graph->optimize(1024);
 		}
 
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
@@ -144,10 +151,10 @@ LidarMapper::parseConfiguration(
 	GlobalMapper::Param &g,
 	LocalMapper::Param &l,
 	TTransform &worldToMap,
-	LidarMapper::Param &gen)
+	LidarMapper::Param &gen,
+	inipp::Ini<char> &ini)
 {
 	std::ifstream configFile(configPath);
-	inipp::Ini<char> ini;
 	ini.parse(configFile);
 
 	inipp::extract(ini.sections["Local Mapping"]["ndt_res"], l.ndt_res);
@@ -184,9 +191,6 @@ LidarMapper::parseConfiguration(
 	gen.stopInp = InputOffsetPosition::parseString(stopIdstr);
 
 	inipp::extract(ini.sections["General"]["optimization_distance_trigger"], gen.optimization_distance_trigger);
-	inipp::extract(ini.sections["General"]["min_edge_interval"], gen.min_edge_interval);
-	inipp::extract(ini.sections["General"]["accum_distance_thresh"], gen.accum_distance_thresh);
-	inipp::extract(ini.sections["General"]["max_loop_distance"], gen.max_loop_distance);
 
 	return;
 }
@@ -242,7 +246,7 @@ LidarMapper::flushScanQueue()
 	// Try to find loop at this point
 	auto loopEvent = loopDetector->detect(graph->getFrameList(), scanFrameQueue);
 	for (auto &loop: loopEvent) {
-		// XXX: Unfinished
+		graph->handleLoop(loop);
 	}
 	elapsed_distance_for_optimization = 0.0;
 

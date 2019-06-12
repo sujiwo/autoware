@@ -25,6 +25,7 @@
 
 
 #include "ScanFrame.h"
+#include "LoopDetector.h"
 #include "g2o_types/edge_se3_priorxyz.hpp"
 
 namespace LidarMapper {
@@ -49,7 +50,7 @@ public:
 
 	void clear();
 
-	void optimize();
+	void optimize(int numOfIteration);
 
 	inline int size() const
 	{ return frameList.size(); }
@@ -58,6 +59,8 @@ public:
 
 	const std::vector<ScanFrame::Ptr>& getFrameList() const
 	{ return frameList; }
+
+	void handleLoop(Loop::Ptr &loop);
 
 protected:
 	LidarMapper &parent;
@@ -85,8 +88,15 @@ protected:
 		const std::string &kernel_type,
 		double kernel_size);
 
+	Eigen::MatrixXd calculateInformationMatrix();
+
 	Eigen::MatrixXd calculateInformationMatrix
-	(const ScanFrame &from, const ScanFrame &to);
+	(const Loop &loop);
+
+	// Information matrix generator
+	double
+		const_stddev_x,
+		const_stddev_q;
 };
 
 } /* namespace LidarMapper */

@@ -11,12 +11,12 @@
 #include <vector>
 #include <memory>
 #include <deque>
+#include <limits>
 
 // Change to whichever version of NDT you like
 #include <pcl/registration/ndt.h>
 
 #include "ScanFrame.h"
-#include "PoseGraph.h"
 #include "utilities.h"
 
 
@@ -29,8 +29,14 @@ class LidarMapper;
 struct Loop {
 	using Ptr = std::shared_ptr<Loop>;
 
-	Loop(const ScanFrame::Ptr &f1, const ScanFrame::Ptr &f2, TTransform relative_pose):
-		frame1(f1), frame2(f2), transform2to1(relative_pose)
+	Loop(const ScanFrame::Ptr &f1, const ScanFrame::Ptr &f2,
+		TTransform relative_pose,
+		double fitScore=std::numeric_limits<double>::max()):
+
+		frame1(f1),
+		frame2(f2),
+		transform2to1(relative_pose),
+		fitness_score(fitScore)
 	{}
 
 	/*
@@ -42,6 +48,7 @@ struct Loop {
 
 	// We may need to put other information
 	// eg. information matrix, fitness score?
+	double fitness_score;
 };
 
 
@@ -59,12 +66,11 @@ public:
 
 protected:
 	LidarMapper &parent;
-	PoseGraph::Ptr graph;
 
 	// Special matcher for loop detector
 	pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> matcher;
 
-	const double
+	double
 		distanceFromLastEdgeThreshold,
 		accumDistanceThresh,
 		maxLoopDistance;

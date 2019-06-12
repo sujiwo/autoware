@@ -9,7 +9,6 @@
 
 #include "LoopDetector.h"
 #include "LidarMapper.h"
-#include "PoseGraph.h"
 
 using namespace std;
 
@@ -23,12 +22,12 @@ const double fitness_score_threshold = 0.5;
 namespace LidarMapper {
 
 LoopDetector::LoopDetector(LidarMapper &p):
-	parent(p),
-	graph(p.graph),
-	distanceFromLastEdgeThreshold(p.getParams().min_edge_interval),
-	accumDistanceThresh(p.getParams().accum_distance_thresh),
-	maxLoopDistance(p.getParams().max_loop_distance)
+	parent(p)
 {
+	auto parentCfg = parent.getRootConfig();
+	inipp::extract(parentCfg.sections["General"]["min_edge_interval"], distanceFromLastEdgeThreshold);
+	inipp::extract(parentCfg.sections["General"]["accum_distance_thresh"], accumDistanceThresh);
+	inipp::extract(parentCfg.sections["General"]["max_loop_distance"], maxLoopDistance);
 }
 
 
@@ -120,7 +119,7 @@ LoopDetector::validate(const std::vector<ScanFrame::Ptr> &candidateList, const S
 		lastAccumDistance = newScanFrame->accum_distance;
 	}
 
-	return make_shared<Loop>(newScanFrame, bestMatch, relativePose);
+	return make_shared<Loop>(newScanFrame, bestMatch, relativePose, best_score);
 }
 
 

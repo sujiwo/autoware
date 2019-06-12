@@ -20,6 +20,10 @@ namespace LidarMapper {
 PoseGraph::PoseGraph(LidarMapper &p) :
 	parent(p)
 {
+	auto iniCfg = parent.getRootConfig();
+	inipp::extract(iniCfg.sections["Scan Matching"]["const_stddev_x"], const_stddev_x);
+	inipp::extract(iniCfg.sections["Scan Matching"]["const_stddev_q"], const_stddev_q);
+
 	graph.reset(new g2o::SparseOptimizer);
 	g2o::OptimizationAlgorithmFactory* solver_factory = g2o::OptimizationAlgorithmFactory::instance();
 	g2o::OptimizationAlgorithmProperty solver_property;
@@ -50,7 +54,7 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 	// Edge between consecutive frames
 	const auto &prevFrame = frameList.back();
 	auto relativeMovement = prevFrame->odometry.inverse() * f->odometry;
-	auto informMat = calculateInformationMatrix(*prevFrame, *f);
+	auto informMat = calculateInformationMatrix();
 	auto edge = createSE3Edge(prevFrame->node, f->node, relativeMovement, informMat);
 
 	// Add an Unary Edge with GNSS constraint
@@ -94,13 +98,27 @@ PoseGraph::createSE3Edge(
 }
 
 
+/*
+ * Generate fixed information matrix
+ */
 Eigen::MatrixXd
-PoseGraph::calculateInformationMatrix
-(const ScanFrame &from, const ScanFrame &to)
+PoseGraph::calculateInformationMatrix()
 {
 	Eigen::MatrixXd information = Eigen::MatrixXd::Identity(6, 6);
+	information.topLeftCorner(3, 3).array() /= const_stddev_x;
+	information.bottomRightCorner(3, 3).array() /= const_stddev_q;
 
-	// XXX: Unfinished
+	return information;
+}
+
+
+/*
+ * Generate information matrix for loop
+ */
+Eigen::MatrixXd
+PoseGraph::calculateInformationMatrix(const Loop &loop)
+{
+	Eigen::MatrixXd information = Eigen::MatrixXd::Identity(6, 6);
 
 	return information;
 }
@@ -124,6 +142,15 @@ PoseGraph::createSE3PriorEdge(g2o::VertexSE3* v_se3, const Eigen::Vector3d& xyz,
 	edge->vertices()[0] = v_se3;
 	graph->addEdge(edge);
 	return edge;
+}
+
+
+void
+PoseGraph::handleLoop(Loop::Ptr &loop)
+{
+	auto infMat = calculateInformationMatrix();
+	auto edge = createSE3Edge(loop->frame2->node, loop->frame1->node, loop->transform2to1, infMat);
+	addRobustKernel(edge, "Huber", 1.0);
 }
 
 } /* namespace LidarMapper */

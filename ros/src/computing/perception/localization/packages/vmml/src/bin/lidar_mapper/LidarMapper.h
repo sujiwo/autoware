@@ -21,6 +21,8 @@
 
 #include "PoseGraph.h"
 #include "LoopDetector.h"
+
+#include "inipp.h"
 #include "utilities.h"
 #include "Trajectory.h"
 #include "RandomAccessBag.h"
@@ -228,14 +230,22 @@ public:
 		GlobalMapper::Param &g,
 		LocalMapper::Param &l,
 		TTransform &worldToMap,
-		LidarMapper::Param &generalParams);
+		LidarMapper::Param &generalParams,
+		inipp::Ini<char> &ini);
 
 	PoseStamped getGnssPose(const ptime &t) const;
 
 	const Param& getParams() const
 	{ return generalParams; }
 
+	const inipp::Ini<char>& getRootConfig() const
+	{ return rootConfiguration; }
+
 protected:
+
+	// Root configuration
+	inipp::Ini<char> rootConfiguration;
+
 	GlobalMapper::Param globalMapperParameters;
 	LocalMapper::Param localMapperParameters;
 	Param generalParams;
