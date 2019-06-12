@@ -70,7 +70,7 @@ LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::pa
 		generalParams.stopId = generalParams.stopInp.asPosition;
 	}
 	else if (generalParams.stopInp.asPosition==-1 and generalParams.stopInp.asSecondsFromStart==-1) {
-		generalParams.stopId = lidarBag->size();
+		generalParams.stopId = lidarBag->size() - 1;
 	}
 
 	cout << "Sequence ID: " << generalParams.startId << "->" << generalParams.stopId << endl;
@@ -92,15 +92,9 @@ LidarMapper::~LidarMapper() {
 void
 LidarMapper::build()
 {
-	// Build GNSS Trajectory
-	createTrajectoryFromGnssBag(*gnssBag, gnssTrajectory, 7, worldToMap);
-	// For debugging
-	auto gnssSubsetTrack =
-		gnssTrajectory.subset(lidarBag->timeAt(generalParams.startId).toBoost(), lidarBag->timeAt(generalParams.stopId-1).toBoost());
-	gnssTrajectory.dump((workDir / "gnss-full.csv").string());
-	gnssSubsetTrack.dump((workDir / "gnss.csv").string());
+	buildGnssTrajectory();
 
-	for (int i=generalParams.startId, c=0; i<generalParams.stopId; ++i, ++c) {
+	for (int i=generalParams.startId, c=0; i<=generalParams.stopId; ++i, ++c) {
 
 		ptime messageTime;
 		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
@@ -253,6 +247,28 @@ LidarMapper::flushScanQueue()
 	elapsed_distance_for_optimization = 0.0;
 
 	scanFrameQueue.clear();
+}
+
+
+void
+LidarMapper::buildGnssTrajectory()
+{
+	// Build GNSS Trajectory for the whole track
+	createTrajectoryFromGnssBag(*gnssBag, gnssTrajectory, 7, worldToMap);
+
+	ptime
+		startTime = lidarBag->timeAt(generalParams.startId).toBoost(),
+		stopTime = lidarBag->timeAt(generalParams.stopId-1).toBoost();
+
+	// For debugging
+	Trajectory gnssSubsetTrack;
+	for (int i=generalParams.startId; i<=generalParams.stopId; ++i) {
+		auto cPose = getGnssPose(lidarBag->timeAt(i).toBoost());
+		gnssSubsetTrack.push_back(cPose);
+	}
+
+	gnssTrajectory.dump((workDir / "gnss-full.csv").string());
+	gnssSubsetTrack.dump((workDir / "gnss.csv").string());
 }
 
 

@@ -5,8 +5,14 @@
  *      Author: sujiwo
  */
 
+#include <g2o/solvers/pcg/linear_solver_pcg.h>
+#include <g2o/solvers/cholmod/linear_solver_cholmod.h>
+
 #include "PoseGraph.h"
 #include "LidarMapper.h"
+
+
+G2O_USE_OPTIMIZATION_LIBRARY(cholmod)
 
 
 namespace LidarMapper {

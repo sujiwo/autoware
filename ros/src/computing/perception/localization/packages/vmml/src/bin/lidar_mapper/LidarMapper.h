@@ -217,6 +217,8 @@ public:
 
 	void build();
 
+	void buildGnssTrajectory();
+
 //	static int createMapFromBag(const std::string &bagpath, const std::string &configPath, const std::string &lidarCalibrationFilePath);
 
 	static int createMapFromBag(const std::string &bagpath, const std::string &workingDirectory);

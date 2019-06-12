@@ -22,10 +22,17 @@ IF(UNIX)
     PATHS /usr/local /usr
     PATH_SUFFIXES include/g2o include)
 
+  find_path(SUITESPARSE_INCLUDE_DIRZ
+  	NAMES cholmod.h
+  	PATHS /usr/include/suitesparse
+  )
+  MESSAGE(STATUS "Suitesparse found in: ${SUITESPARSE_INCLUDE_DIRZ}")
+  list(APPEND G2O_INCLUDE_DIR ${SUITESPARSE_INCLUDE_DIRZ})
+
   IF (G2O_INCLUDE_DIR)
     MESSAGE(STATUS "Found g2o headers in: ${G2O_INCLUDE_DIR}")
   ENDIF (G2O_INCLUDE_DIR)
-
+  
   FIND_LIBRARY(G2O_CORE_LIB             
     NAMES g2o_core 
     PATHS /usr/local /usr 
