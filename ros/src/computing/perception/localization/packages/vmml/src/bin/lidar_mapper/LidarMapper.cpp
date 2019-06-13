@@ -243,6 +243,8 @@ LidarMapper::flushScanQueue()
 		graph->addScanFrame(frame);
 	}
 
+	cout << "Added " << scanFrameQueue.size() << " new frames" << endl;
+
 	// Try to find loop at this point
 	auto loopEvent = loopDetector->detect(graph->getFrameList(), scanFrameQueue);
 	for (auto &loop: loopEvent) {

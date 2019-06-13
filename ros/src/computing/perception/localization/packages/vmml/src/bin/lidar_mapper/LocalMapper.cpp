@@ -46,7 +46,6 @@ LocalMapper::LocalMapper(LidarMapper &_parent, const LocalMapper::Param &p):
 void
 LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, int scanId)
 {
-	bool addNewFrame = false;
 	ScanProcessLog feedResult;
 
 	current_scan_time = messageTime;
@@ -114,7 +113,6 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 		currentSubmap += *transformed_scan_ptr;
 		added_pose = current_pose;
 		isMapUpdate = true;
-		addNewFrame = true;
 	}
 
 	// Update position
@@ -133,10 +131,6 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 
 		submap_id++;
 		hasSubmapIdIncremented = true;
-	}
-
-	if (addNewFrame==true) {
-
 	}
 
 	// XXX: Put logging here

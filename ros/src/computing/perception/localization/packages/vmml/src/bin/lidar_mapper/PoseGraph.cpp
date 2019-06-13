@@ -5,6 +5,8 @@
  *      Author: sujiwo
  */
 
+#include <iostream>
+
 #include <g2o/solvers/pcg/linear_solver_pcg.h>
 #include <g2o/solvers/cholmod/linear_solver_cholmod.h>
 
@@ -13,6 +15,8 @@
 
 
 G2O_USE_OPTIMIZATION_LIBRARY(cholmod)
+
+using namespace std;
 
 
 namespace LidarMapper {
@@ -49,9 +53,12 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 		anchorNode = createSE3Node(TTransform::Identity());
 		anchorNode->setFixed(true);
 		anchorEdge = createSE3Edge(anchorNode, f->node, TTransform::Identity(), Eigen::MatrixXd::Identity(6, 6));
+		frameList.push_back(f);
+		return true;
 	}
 
 	// Edge between consecutive frames
+	// frameList is empty!
 	const auto &prevFrame = frameList.back();
 	auto relativeMovement = prevFrame->odometry.inverse() * f->odometry;
 	auto informMat = calculateInformationMatrix();
@@ -151,6 +158,30 @@ PoseGraph::handleLoop(Loop::Ptr &loop)
 	auto infMat = calculateInformationMatrix();
 	auto edge = createSE3Edge(loop->frame2->node, loop->frame1->node, loop->transform2to1, infMat);
 	addRobustKernel(edge, "Huber", 1.0);
+}
+
+
+void
+PoseGraph::optimize(int numOfIteration)
+{
+	if (graph->edges().size() < 10)
+		return;
+
+	cout << "Graph Optimization... " << flush;
+
+	graph->initializeOptimization();
+	graph->computeInitialGuess();
+	graph->computeActiveErrors();
+	graph->setVerbose(true);
+
+	double chi2_1 = graph->chi2();
+
+	auto t1 = getCurrentTime();
+	int iterations = graph->optimize(numOfIteration);
+	auto t2 = getCurrentTime();
+
+	double sec = toSeconds(t2-t1);
+	cout << "Done: " << sec << " seconds" << endl;
 }
 
 } /* namespace LidarMapper */
