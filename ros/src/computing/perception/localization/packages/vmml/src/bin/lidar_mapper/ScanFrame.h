@@ -33,6 +33,9 @@ struct ScanFrame {
 	inline static Ptr create(int64_t i, const ptime &t, const Pose &localPose, const Pose &gps, double ad)
 	{ return Ptr(new ScanFrame(i, t, localPose, gps, ad)); }
 
+	inline const Pose getPose() const
+	{ return Pose::fromIsometry(node->estimate()); }
+
 	ptime timestamp;
 //	pcl::PointCloud<pcl::PointXYZI>::ConstPtr scan;
 	Pose odometry;				// Supplied by local mapper

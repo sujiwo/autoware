@@ -58,7 +58,6 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 	}
 
 	// Edge between consecutive frames
-	// frameList is empty!
 	const auto &prevFrame = frameList.back();
 	auto relativeMovement = prevFrame->odometry.inverse() * f->odometry;
 	auto informMat = calculateInformationMatrix();
@@ -182,6 +181,21 @@ PoseGraph::optimize(int numOfIteration)
 
 	double sec = toSeconds(t2-t1);
 	cout << "Done: " << sec << " seconds" << endl;
+}
+
+
+const Trajectory
+PoseGraph::dumpTrajectory() const
+{
+	Trajectory frames;
+
+	for (int i=0; i<frameList.size(); ++i) {
+		auto frame = frameList[i];
+		Pose framePose = frame->getPose();
+		frames.push_back(PoseStamped(framePose, frame->timestamp));
+	}
+
+	return frames;
 }
 
 } /* namespace LidarMapper */

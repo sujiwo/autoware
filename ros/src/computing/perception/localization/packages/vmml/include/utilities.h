@@ -340,6 +340,18 @@ struct TTransform : public Eigen::Affine3d
 		return m;
 	}
 
+	/*
+	 * XXX: Dubious
+	 */
+	inline static TTransform
+	fromIsometry(const Eigen::Isometry3d &ti)
+	{
+		TTransform mti;
+		mti.translation() = ti.translation();
+		mti.linear() = ti.rotation();
+		return mti;
+	}
+
 /*
 	TTransform operator / (const tduration &td) const
 	{ return *this / toSeconds(td); }

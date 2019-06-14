@@ -24,6 +24,7 @@
 #include <g2o/types/slam3d_addons/types_slam3d_addons.h>
 
 
+#include "Trajectory.h"
 #include "ScanFrame.h"
 #include "LoopDetector.h"
 #include "g2o_types/edge_se3_priorxyz.hpp"
@@ -61,6 +62,8 @@ public:
 	{ return frameList; }
 
 	void handleLoop(Loop::Ptr &loop);
+
+	const Trajectory dumpTrajectory() const;
 
 protected:
 	LidarMapper &parent;

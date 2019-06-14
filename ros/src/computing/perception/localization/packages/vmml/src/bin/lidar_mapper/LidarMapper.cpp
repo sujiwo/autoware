@@ -121,7 +121,12 @@ LidarMapper::build()
 			cout << "Optimization started" << endl;
 			flushScanQueue();
 			// XXX: Check
+			auto trackOld = graph->dumpTrajectory();
+			trackOld.dump((workDir / "track.old.csv").string());
 			graph->optimize(1024);
+			auto trackNew = graph->dumpTrajectory();
+			trackNew.dump((workDir / "track.new.csv").string());
+			exit(1);
 		}
 
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
