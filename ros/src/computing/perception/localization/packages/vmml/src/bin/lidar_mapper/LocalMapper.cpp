@@ -51,6 +51,10 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	current_scan_time = messageTime;
 	currentScanId = scanId;
 
+	if (scanId==parent.generalParams.startId) {
+		parent.addNewScanFrame(scanId, messageTime, Pose::Identity(), 0.0);
+	}
+
 	// Add initial point cloud to velodyne_map
 	if (initial_scan_loaded==false) {
 		currentMap += *newScan;
@@ -106,7 +110,7 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 
 		// add to pose graph
 		accum_distance += lastMapShift.translation().norm();
-		parent.addNewScanFrame(scanId, messageTime, current_pose, accum_distance);
+		parent.addNewScanFrame(scanId, messageTime, current_pose, accum_distance, mNdt.getFitnessScore());
 
 		submap_size += shift;
 		currentMap += *transformed_scan_ptr;

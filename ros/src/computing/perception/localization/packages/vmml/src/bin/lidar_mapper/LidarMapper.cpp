@@ -228,10 +228,11 @@ LidarMapper::getGnssPose(const ptime &t) const
 
 
 void
-LidarMapper::addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance)
+LidarMapper::addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance, double fitnessScore)
 {
 	Pose gnssPose = getGnssPose(timestamp);
 	auto scanfr = ScanFrame::create(bId, timestamp, odom, gnssPose, accum_distance);
+	scanfr->fitnessScore = fitnessScore;
 	// G2O node will be computed later
 	scanFrameQueue.push_back(scanfr);
 	elapsed_distance_for_optimization += accum_distance;

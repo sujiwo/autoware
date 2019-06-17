@@ -13,10 +13,18 @@
 #include "PoseGraph.h"
 #include "LidarMapper.h"
 
-
-G2O_USE_OPTIMIZATION_LIBRARY(cholmod)
-
 using namespace std;
+
+
+G2O_USE_OPTIMIZATION_LIBRARY(pcg)
+G2O_USE_OPTIMIZATION_LIBRARY(cholmod)
+G2O_USE_OPTIMIZATION_LIBRARY(csparse)
+
+namespace g2o {
+  G2O_REGISTER_TYPE(EDGE_SE3_PRIORXYZ, EdgeSE3PriorXYZ)
+}
+
+
 
 
 namespace LidarMapper {
@@ -45,30 +53,30 @@ PoseGraph::~PoseGraph()
 bool
 PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 {
-	// New vertex
-	f->node = createSE3Node(f->odometry);
-
 	// First vertex ?
 	if (frameList.empty()) {
 		anchorNode = createSE3Node(TTransform::Identity());
-		anchorNode->setFixed(true);
-		anchorEdge = createSE3Edge(anchorNode, f->node, TTransform::Identity(), Eigen::MatrixXd::Identity(6, 6));
+		f->node = anchorNode;
 		frameList.push_back(f);
 		return true;
 	}
+
+	// New vertex
+	f->node = createSE3Node(f->odometry);
 
 	// Edge between consecutive frames
 	const auto &prevFrame = frameList.back();
 	auto relativeMovement = prevFrame->odometry.inverse() * f->odometry;
 	auto informMat = calculateInformationMatrix();
-	auto edge = createSE3Edge(prevFrame->node, f->node, relativeMovement, informMat);
+	auto edge2 = createSE3Edge(prevFrame->node, f->node, relativeMovement, informMat);
 
 	// Add an Unary Edge with GNSS constraint
 	auto gnssPose = parent.getGnssPose(f->timestamp);
 	Eigen::Matrix3d information_matrix = Eigen::Matrix3d::Identity();
 	information_matrix.block<2, 2>(0, 0) /= parent.getParams().gnss_stddev_horizontal;
 	information_matrix(2, 2) /= parent.getParams().gnss_stddev_vertical;
-	createSE3PriorEdge(f->node, gnssPose.position(), information_matrix);
+	auto edge1 = createSE3PriorEdge(f->node, gnssPose.position(), information_matrix);
+	addRobustKernel(edge1, "Huber", 0.1);
 
 	frameList.push_back(f);
 

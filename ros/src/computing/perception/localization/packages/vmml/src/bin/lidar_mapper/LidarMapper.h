@@ -276,7 +276,7 @@ protected:
 
 	void detectLoopInGnssTrajectory(std::vector<std::pair<uint32_t,uint32_t>> &) const;
 
-	void addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance);
+	void addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance, double fitnessScore=0.0);
 	void flushScanQueue();
 };
 
