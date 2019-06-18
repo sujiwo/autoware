@@ -44,6 +44,21 @@ class EdgeSE3PriorXYZ : public g2o::BaseUnaryEdge<3, Eigen::Vector3d, g2o::Verte
 			return os.good();
 		}
 	};
+
+
+class EdgeSE3PriorXYZQ : public g2o::BaseUnaryEdge<6, Eigen::Isometry3d, g2o::VertexSE3> {
+public:
+
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+	EdgeSE3PriorXYZQ() : g2o::BaseUnaryEdge<6, Eigen::Isometry3d, g2o::VertexSE3>() {}
+
+};
+
+
+
 }
+
+
 
 #endif

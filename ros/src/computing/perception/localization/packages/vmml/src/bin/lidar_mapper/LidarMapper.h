@@ -10,6 +10,8 @@
 
 #include <string>
 #include <deque>
+#include <map>
+#include <limits>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -78,9 +80,10 @@ friend class LidarMapper;
 		uint64_t sequence_num;
 		ptime timestamp;
 		int numOfScanPoints, filteredScanPoints, mapNumOfPoints;
-		bool hasConverged;
-		float fitness_score;
-		float transformation_probability;
+		bool hasConverged = false;
+		float
+			fitness_score 					= std::numeric_limits<float>::max(),
+			transformation_probability 		= std::numeric_limits<float>::max();
 		int num_of_iteration;
 		Pose poseAtScan;
 		float shift;
@@ -94,7 +97,7 @@ friend class LidarMapper;
 	typedef pcl::PointCloud<pcl::PointXYZI> LocalMapperCloud;
 
 	LocalMapper(LidarMapper &_parent, const Param &p);
-	void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime, int scanId);
+	void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime, int64 scanId);
 	void outputCurrentSubmap();
 
 
@@ -134,6 +137,8 @@ protected:
 
 	std::string generateSubmapPcdName();
 
+	std::map<int64, ScanProcessLog> scanResults;
+
 };	// LidarMapper::LocalMapper
 
 
@@ -152,6 +157,11 @@ public:
 		int
 			max_iter,
 			queue_size;
+	};
+
+	struct ScanProcessLog : public LocalMapper::ScanProcessLog
+	{
+		bool gnssIsUsed = false;
 	};
 
 	typedef pcl::PointCloud<pcl::PointXYZ> GlobalMapperCloud;
@@ -183,6 +193,8 @@ protected:
 	int
 		num_iterations;
 
+	std::map<int64, ScanProcessLog> scanResults;
+
 };	// LidarMapper::GlobalMapper
 
 
@@ -202,11 +214,6 @@ public:
 			min_edge_interval,
 			accum_distance_thresh,
 			max_loop_distance;
-
-		// Actually related to GNSS
-		double
-			gnss_stddev_horizontal,
-			gnss_stddev_vertical;
 	};
 
 	friend class GlobalMapper;

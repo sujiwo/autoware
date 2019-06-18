@@ -78,14 +78,17 @@ protected:
 	g2o::RobustKernelFactory* robust_kernel_factory;
 
 	g2o::VertexSE3* createSE3Node(const TTransform &tf);
+
 	g2o::EdgeSE3* createSE3Edge(
 		g2o::VertexSE3* v1, g2o::VertexSE3* v2,
 		const TTransform &relativePose,
 		const Eigen::MatrixXd &informationMatrix);
+
 	g2o::EdgeSE3PriorXYZ* createSE3PriorEdge(
 		g2o::VertexSE3* v_se3,
 		const Eigen::Vector3d& xyz,
 		const Eigen::MatrixXd& information_matrix);
+
 	void addRobustKernel(
 		g2o::OptimizableGraph::Edge* edge,
 		const std::string &kernel_type,
@@ -100,6 +103,9 @@ protected:
 	double
 		const_stddev_x,
 		const_stddev_q;
+	double
+	gnss_stddev_horizontal,
+	gnss_stddev_vertical;
 };
 
 } /* namespace LidarMapper */

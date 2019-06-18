@@ -49,6 +49,10 @@ void GlobalMapper::loadMap(const string &pcdFilename)
 
 void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messageTime, int scanId)
 {
+	ScanProcessLog curResult;
+	curResult.sequence_num = scanId;
+	curResult.timestamp = messageTime;
+
 	currentScanId = scanId;
 	current_gnss_pose = parent.getGnssPose(messageTime);
 
@@ -63,6 +67,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 		currentPose = current_gnss_pose;
 		previous_pose = current_gnss_pose;
 		vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
+		curResult.gnssIsUsed = true;
 		return;
 	}
 
@@ -71,11 +76,13 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 		lastDisplacement = previous_pose.inverse() * currentPose;
 		vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
 		previous_pose = currentPose;
+		curResult.gnssIsUsed = true;
 		return;
 	}
 
 	else if (fitness_score>=500.0) {
 		guessPose = current_gnss_pose;
+		curResult.gnssIsUsed = true;
 	}
 
 	else {
@@ -83,6 +90,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 		Vector3d rot = quaternionToRPY(lastDisplacement.orientation());
 		TTransform guessDisplacement = TTransform::from_XYZ_RPY(lastDisplacement.translation(), 0, 0, rot.z());
 		guessPose = previous_pose * guessDisplacement;
+		curResult.gnssIsUsed = true;
 	}
 
 	GlobalMapperCloud::Ptr output_cloud(new GlobalMapperCloud);
@@ -103,17 +111,18 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 	// velocity and acceleration not needed
 
 	// Calculate NDT reliability
-	fitness_score = mNdt.getFitnessScore();
-	transformation_probability = mNdt.getTransformationProbability();
-	num_iterations = mNdt.getFinalNumIteration();
-
-	// Logging
-	printf("F: %f; T: %f; I: %d\n", fitness_score, transformation_probability, num_iterations);
+	curResult.fitness_score = mNdt.getFitnessScore();
+	curResult.transformation_probability = mNdt.getTransformationProbability();
+	curResult.num_of_iteration = mNdt.getFinalNumIteration();
 
 	lastDisplacement = previous_pose.inverse() * currentPose;
 
 	previous_pose = currentPose;
 	vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
+	curResult.poseAtScan = currentPose;
+
+	// Logging
+	scanResults[scanId] = curResult;
 
 	return;
 }

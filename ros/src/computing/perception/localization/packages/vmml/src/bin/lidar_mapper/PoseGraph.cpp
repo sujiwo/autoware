@@ -36,6 +36,9 @@ PoseGraph::PoseGraph(LidarMapper &p) :
 	inipp::extract(iniCfg.sections["Scan Matching"]["const_stddev_x"], const_stddev_x);
 	inipp::extract(iniCfg.sections["Scan Matching"]["const_stddev_q"], const_stddev_q);
 
+	inipp::extract(iniCfg.sections["GNSS"]["stddev_horizontal"], gnss_stddev_horizontal);
+	inipp::extract(iniCfg.sections["GNSS"]["stddev_vertical"], gnss_stddev_vertical);
+
 	graph.reset(new g2o::SparseOptimizer);
 	g2o::OptimizationAlgorithmFactory* solver_factory = g2o::OptimizationAlgorithmFactory::instance();
 	g2o::OptimizationAlgorithmProperty solver_property;
@@ -57,6 +60,13 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 	if (frameList.empty()) {
 		anchorNode = createSE3Node(TTransform::Identity());
 		f->node = anchorNode;
+		auto gnssPose = parent.getGnssPose(f->timestamp);
+		Eigen::Matrix3d information_matrix = Eigen::Matrix3d::Identity();
+		information_matrix.block<2, 2>(0, 0) /= gnss_stddev_horizontal;
+		information_matrix(2, 2) /= gnss_stddev_vertical;
+		auto edge1 = createSE3PriorEdge(f->node, gnssPose.position(), information_matrix);
+		addRobustKernel(edge1, "Huber", 0.1);
+
 		frameList.push_back(f);
 		return true;
 	}
@@ -73,8 +83,8 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 	// Add an Unary Edge with GNSS constraint
 	auto gnssPose = parent.getGnssPose(f->timestamp);
 	Eigen::Matrix3d information_matrix = Eigen::Matrix3d::Identity();
-	information_matrix.block<2, 2>(0, 0) /= parent.getParams().gnss_stddev_horizontal;
-	information_matrix(2, 2) /= parent.getParams().gnss_stddev_vertical;
+	information_matrix.block<2, 2>(0, 0) /= gnss_stddev_horizontal;
+	information_matrix(2, 2) /= gnss_stddev_vertical;
 	auto edge1 = createSE3PriorEdge(f->node, gnssPose.position(), information_matrix);
 	addRobustKernel(edge1, "Huber", 0.1);
 

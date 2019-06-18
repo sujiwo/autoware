@@ -121,12 +121,7 @@ LidarMapper::build()
 			cout << "Optimization started" << endl;
 			flushScanQueue();
 			// XXX: Check
-			auto trackOld = graph->dumpTrajectory();
-			trackOld.dump((workDir / "track.old.csv").string());
 			graph->optimize(1024);
-			auto trackNew = graph->dumpTrajectory();
-			trackNew.dump((workDir / "track.new.csv").string());
-			exit(1);
 		}
 
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
@@ -134,6 +129,8 @@ LidarMapper::build()
 
 	// XXX: Temporary
 	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
+	auto vecTrack = graph->dumpTrajectory();
+	vecTrack.dump((workDir/"track_optimized.csv").string());
 }
 
 
@@ -185,8 +182,6 @@ LidarMapper::parseConfiguration(
 	inipp::extract(ini.sections["GNSS"]["pitch"], oWorldToMapTf.y());
 	inipp::extract(ini.sections["GNSS"]["yaw"], oWorldToMapTf.z());
 	worldToMap = TTransform::from_XYZ_RPY(vWorldToMapTf, oWorldToMapTf.x(), oWorldToMapTf.y(), oWorldToMapTf.z());
-	inipp::extract(ini.sections["GNSS"]["stddev_horizontal"], gen.gnss_stddev_horizontal);
-	inipp::extract(ini.sections["GNSS"]["stddev_vertical"], gen.gnss_stddev_vertical);
 
 	string startIdstr, stopIdstr;
 	inipp::extract(ini.sections["General"]["start"], startIdstr);

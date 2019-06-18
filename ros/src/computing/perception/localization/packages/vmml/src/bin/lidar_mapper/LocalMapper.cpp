@@ -44,12 +44,15 @@ LocalMapper::LocalMapper(LidarMapper &_parent, const LocalMapper::Param &p):
 
 
 void
-LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, int scanId)
+LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, int64 scanId)
 {
 	ScanProcessLog feedResult;
 
 	current_scan_time = messageTime;
 	currentScanId = scanId;
+
+	feedResult.sequence_num = scanId;
+	feedResult.timestamp = messageTime;
 
 	if (scanId==parent.generalParams.startId) {
 		parent.addNewScanFrame(scanId, messageTime, Pose::Identity(), 0.0);
@@ -59,6 +62,8 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	if (initial_scan_loaded==false) {
 		currentMap += *newScan;
 		initial_scan_loaded = true;
+
+		scanResults[scanId] = feedResult;
 		return;
 	}
 
@@ -121,6 +126,7 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 
 	// Update position
 	previous_pose = current_pose;
+	feedResult.poseAtScan = current_pose;
 
 	// Output submap file after a certain threshold
 	if (submap_size >= param.max_submap_size) {
@@ -141,6 +147,10 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	localMapTrack.push_back(PoseStamped(current_pose, messageTime));
 	feedResult.fitness_score = mNdt.getFitnessScore();
 	feedResult.num_of_iteration = mNdt.getFinalNumIteration();
+	feedResult.hasConverged = mNdt.hasConverged();
+	feedResult.transformation_probability = mNdt.getTransformationProbability();
+
+	scanResults[scanId] = feedResult;
 }
 
 
