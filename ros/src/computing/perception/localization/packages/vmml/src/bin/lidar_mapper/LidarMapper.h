@@ -91,6 +91,9 @@ friend class LidarMapper;
 		ptime submap_origin_stamp;
 		Pose submap_origin_pose;
 
+		bool hasScanFrame					= false;
+		int64 prevScanFrame					= -1;
+
 		std::string dump();
 	};
 
@@ -132,6 +135,7 @@ protected:
 	ptime submapOriginTimestamp;
 	Pose submapOriginPose;
 	double accum_distance = 0.0;
+	int64_t lastScanFrame = -1;
 
 	Trajectory localMapTrack;
 

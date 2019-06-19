@@ -53,6 +53,35 @@ public:
 
 	EdgeSE3PriorXYZQ() : g2o::BaseUnaryEdge<6, Eigen::Isometry3d, g2o::VertexSE3>() {}
 
+	void computeError() override
+	{
+		const auto node = static_cast<g2o::VertexSE3*>(_vertices[0]);
+		const auto estimate = node->estimate();
+		const Eigen::Isometry3d delta = estimate.inverse() * measurement();
+		_error[0] = delta.translation().x();
+		_error[1] = delta.translation().y();
+		_error[2] = delta.translation().z();
+		_error[3] = delta.rotation().x();
+		_error[4] = delta.rotation().y();
+		_error[5] = delta.rotation().z();
+	}
+
+	virtual int measurementDimension() const {return 7;}
+
+	void setMeasurement(const Eigen::Isometry3d &m) override
+	{
+		_measurement = m;
+	}
+
+	virtual bool read(std::istream& is)
+	{
+
+	}
+
+	virtual bool write(std::ostream& os) const
+	{
+
+	}
 };
 
 
