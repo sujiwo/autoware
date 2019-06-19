@@ -7,6 +7,7 @@
 
 #include <iostream>
 
+#include <g2o/types/slam3d/parameter_se3_offset.h>
 #include <g2o/solvers/pcg/linear_solver_pcg.h>
 #include <g2o/solvers/cholmod/linear_solver_cholmod.h>
 
@@ -20,9 +21,11 @@ G2O_USE_OPTIMIZATION_LIBRARY(pcg)
 G2O_USE_OPTIMIZATION_LIBRARY(cholmod)
 G2O_USE_OPTIMIZATION_LIBRARY(csparse)
 
+/*
 namespace g2o {
   G2O_REGISTER_TYPE(EDGE_SE3_PRIORXYZ, EdgeSE3PriorXYZ)
 }
+*/
 
 
 
@@ -38,12 +41,18 @@ PoseGraph::PoseGraph(LidarMapper &p) :
 
 	inipp::extract(iniCfg.sections["GNSS"]["stddev_horizontal"], gnss_stddev_horizontal);
 	inipp::extract(iniCfg.sections["GNSS"]["stddev_vertical"], gnss_stddev_vertical);
+	inipp::extract(iniCfg.sections["GNSS"]["stddev_angular"], gnss_stddev_angular);
 
 	graph.reset(new g2o::SparseOptimizer);
 	g2o::OptimizationAlgorithmFactory* solver_factory = g2o::OptimizationAlgorithmFactory::instance();
 	g2o::OptimizationAlgorithmProperty solver_property;
 	g2o::OptimizationAlgorithm* solver = solver_factory->construct("lm_var_cholmod", solver_property);
 	graph->setAlgorithm(solver);
+
+	g2o::ParameterSE3Offset *param = new g2o::ParameterSE3Offset;
+	param->setOffset(g2o::Isometry3::Identity());
+	param->setId(0);
+	graph->addParameter(param);
 
 	robust_kernel_factory = g2o::RobustKernelFactory::instance();
 }
@@ -60,13 +69,8 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 	if (frameList.empty()) {
 		anchorNode = createSE3Node(TTransform::Identity());
 		f->node = anchorNode;
-		auto gnssPose = parent.getGnssPose(f->timestamp);
-		Eigen::Matrix3d information_matrix = Eigen::Matrix3d::Identity();
-		information_matrix.block<2, 2>(0, 0) /= gnss_stddev_horizontal;
-		information_matrix(2, 2) /= gnss_stddev_vertical;
-		auto edge1 = createSE3PriorEdge(f->node, gnssPose.position(), information_matrix);
+		auto edge1 = createGnssPrior(f->node,  f->timestamp);
 		addRobustKernel(edge1, "Huber", 0.1);
-
 		frameList.push_back(f);
 		return true;
 	}
@@ -75,19 +79,18 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 	f->node = createSE3Node(f->odometry);
 
 	// Edge between consecutive frames
+	cout << "Adding frame" << endl;
 	const auto &prevFrame = frameList.back();
 	auto relativeMovement = prevFrame->odometry.inverse() * f->odometry;
 	auto informMat = calculateInformationMatrix();
 	auto edge2 = createSE3Edge(prevFrame->node, f->node, relativeMovement, informMat);
 
 	// Add an Unary Edge with GNSS constraint
+/*
 	auto gnssPose = parent.getGnssPose(f->timestamp);
-	Eigen::Matrix3d information_matrix = Eigen::Matrix3d::Identity();
-	information_matrix.block<2, 2>(0, 0) /= gnss_stddev_horizontal;
-	information_matrix(2, 2) /= gnss_stddev_vertical;
-	auto edge1 = createSE3PriorEdge(f->node, gnssPose.position(), information_matrix);
+	auto edge1 = createGnssPrior(f->node, f->timestamp);
 	addRobustKernel(edge1, "Huber", 0.1);
-
+*/
 	frameList.push_back(f);
 
 	return true;
@@ -98,7 +101,7 @@ g2o::VertexSE3*
 PoseGraph::createSE3Node(const TTransform &tf)
 {
 	g2o::VertexSE3* vertex(new g2o::VertexSE3);
-	vertex->setId(static_cast<int>(graph->vertices().size()));
+	vertex->setId(static_cast<int>(graph->vertices().size())+1);
 	vertex->setEstimate(tf.toIsometry());
 	graph->addVertex(vertex);
 	return vertex;
@@ -157,15 +160,30 @@ PoseGraph::addRobustKernel(g2o::OptimizableGraph::Edge* edge, const std::string 
 }
 
 
-g2o::EdgeSE3PriorXYZ*
-PoseGraph::createSE3PriorEdge(g2o::VertexSE3* v_se3, const Eigen::Vector3d& xyz, const Eigen::MatrixXd& information_matrix)
+g2o::EdgeSE3Prior*
+PoseGraph::createSE3PriorEdge(g2o::VertexSE3* v_se3, const TTransform& pose, const Eigen::MatrixXd& information_matrix)
 {
-	g2o::EdgeSE3PriorXYZ* edge(new g2o::EdgeSE3PriorXYZ);
-	edge->setMeasurement(xyz);
+	g2o::EdgeSE3Prior* edge(new g2o::EdgeSE3Prior);
+	edge->setMeasurement(pose.toIsometry());
 	edge->setInformation(information_matrix);
 	edge->vertices()[0] = v_se3;
+	edge->setParameterId(0, 0);
 	graph->addEdge(edge);
 	return edge;
+}
+
+
+g2o::EdgeSE3Prior*
+PoseGraph::createGnssPrior(g2o::VertexSE3* v_se3, const ptime &t)
+{
+	auto gPose = parent.getGnssPose(t);
+
+	g2o::Matrix6 information_matrix = g2o::Matrix6::Identity(6, 6);
+	information_matrix.block<2, 2>(0, 0) /= gnss_stddev_horizontal;
+	information_matrix(2, 2) /= gnss_stddev_vertical;
+	information_matrix.bottomRightCorner(3, 3).array() /= gnss_stddev_angular;
+
+	return createSE3PriorEdge(v_se3, gPose, information_matrix);
 }
 
 

@@ -21,13 +21,14 @@
 #include <g2o/core/optimization_algorithm_factory.h>
 #include <g2o/types/slam3d/types_slam3d.h>
 #include <g2o/types/slam3d/edge_se3_pointxyz.h>
+#include <g2o/types/slam3d/edge_se3_prior.h>
 #include <g2o/types/slam3d_addons/types_slam3d_addons.h>
 
 
 #include "Trajectory.h"
 #include "ScanFrame.h"
 #include "LoopDetector.h"
-#include "g2o_types/edge_se3_priorxyz.hpp"
+//#include "g2o_types/edge_se3_priorxyz.hpp"
 
 namespace LidarMapper {
 
@@ -84,15 +85,17 @@ protected:
 		const TTransform &relativePose,
 		const Eigen::MatrixXd &informationMatrix);
 
-	g2o::EdgeSE3PriorXYZ* createSE3PriorEdge(
+	g2o::EdgeSE3Prior* createSE3PriorEdge(
 		g2o::VertexSE3* v_se3,
-		const Eigen::Vector3d& xyz,
+		const TTransform& pose,
 		const Eigen::MatrixXd& information_matrix);
 
 	void addRobustKernel(
 		g2o::OptimizableGraph::Edge* edge,
 		const std::string &kernel_type,
 		double kernel_size);
+
+	g2o::EdgeSE3Prior* createGnssPrior(g2o::VertexSE3* v_se3, const ptime &t);
 
 	Eigen::MatrixXd calculateInformationMatrix();
 
@@ -104,8 +107,9 @@ protected:
 		const_stddev_x,
 		const_stddev_q;
 	double
-	gnss_stddev_horizontal,
-	gnss_stddev_vertical;
+		gnss_stddev_horizontal,
+		gnss_stddev_vertical,
+		gnss_stddev_angular;
 };
 
 } /* namespace LidarMapper */
