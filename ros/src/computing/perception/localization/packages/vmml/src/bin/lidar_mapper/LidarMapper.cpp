@@ -242,6 +242,17 @@ LidarMapper::flushScanQueue()
 
 	for (auto &frame: scanFrameQueue) {
 		graph->addScanFrame(frame);
+
+		auto globalMatchRes = globalMapperProc->getScanLog(frame->bagId);
+		// XXX: thresholding here ?
+		if (globalMatchRes.fitness_score < 1.0) {
+
+		}
+
+		// use GNSS pose instead ?
+		else {
+
+		}
 	}
 
 	cout << "Added " << scanFrameQueue.size() << " new frames" << endl;

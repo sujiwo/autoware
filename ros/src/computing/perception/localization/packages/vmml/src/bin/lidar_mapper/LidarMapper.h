@@ -103,6 +103,8 @@ friend class LidarMapper;
 	void feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr newScan, const ptime &messageTime, int64 scanId);
 	void outputCurrentSubmap();
 
+	inline const ScanProcessLog& getScanLog(const int64 scanID) const
+	{ return scanResults.at(scanID); }
 
 protected:
 	Param param;
@@ -173,6 +175,9 @@ public:
 	GlobalMapper(LidarMapper &_parent, const Param &p);
 	void loadMap(const std::string &point_cloud_map_filename);
 	void feed(GlobalMapperCloud::ConstPtr &newscan, const ptime &messageTime, int scanId);
+
+	inline const ScanProcessLog& getScanLog(const int64 scanID) const
+	{ return scanResults.at(scanID); }
 
 protected:
 	Param param;

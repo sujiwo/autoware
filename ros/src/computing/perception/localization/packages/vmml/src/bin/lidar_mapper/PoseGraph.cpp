@@ -97,6 +97,13 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 }
 
 
+void
+PoseGraph::addGlobalPose (ScanFrame::Ptr &f, const Pose &gpose)
+{
+
+}
+
+
 g2o::VertexSE3*
 PoseGraph::createSE3Node(const TTransform &tf)
 {
