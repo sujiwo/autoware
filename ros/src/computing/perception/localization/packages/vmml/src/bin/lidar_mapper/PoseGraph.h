@@ -59,6 +59,9 @@ public:
 
 	bool addScanFrame(ScanFrame::Ptr &f);
 
+	inline const ScanFrame::Ptr& lastFrame() const
+	{ return frameList.back(); }
+
 	void addGlobalPose (ScanFrame::Ptr &f, const Pose &gpose);
 
 	const std::vector<ScanFrame::Ptr>& getFrameList() const

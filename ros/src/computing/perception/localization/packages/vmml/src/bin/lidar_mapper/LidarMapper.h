@@ -93,6 +93,7 @@ friend class LidarMapper;
 
 		bool hasScanFrame					= false;
 		int64 prevScanFrame					= -1;
+		double accum_distance				= 0.0;
 
 		std::string dump();
 	};
@@ -292,7 +293,8 @@ protected:
 
 	void detectLoopInGnssTrajectory(std::vector<std::pair<uint32_t,uint32_t>> &) const;
 
-	void addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance, double fitnessScore=0.0);
+	void addNewScanFrame(int64 bagId);
+
 	void flushScanQueue();
 };
 

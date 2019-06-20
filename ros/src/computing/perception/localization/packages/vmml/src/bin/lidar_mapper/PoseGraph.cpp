@@ -67,7 +67,7 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 {
 	// First vertex ?
 	if (frameList.empty()) {
-		anchorNode = createSE3Node(TTransform::Identity());
+		anchorNode = createSE3Node(f->gnssPose);
 		f->node = anchorNode;
 		auto edge1 = createGnssPrior(f->node,  f->timestamp);
 		addRobustKernel(edge1, "Huber", 0.1);
@@ -79,18 +79,11 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 	f->node = createSE3Node(f->odometry);
 
 	// Edge between consecutive frames
-	cout << "Adding frame" << endl;
 	const auto &prevFrame = frameList.back();
 	auto relativeMovement = prevFrame->odometry.inverse() * f->odometry;
 	auto informMat = calculateInformationMatrix();
 	auto edge2 = createSE3Edge(prevFrame->node, f->node, relativeMovement, informMat);
 
-	// Add an Unary Edge with GNSS constraint
-/*
-	auto gnssPose = parent.getGnssPose(f->timestamp);
-	auto edge1 = createGnssPrior(f->node, f->timestamp);
-	addRobustKernel(edge1, "Huber", 0.1);
-*/
 	frameList.push_back(f);
 
 	return true;
@@ -100,7 +93,17 @@ PoseGraph::addScanFrame(ScanFrame::Ptr &f)
 void
 PoseGraph::addGlobalPose (ScanFrame::Ptr &f, const Pose &gpose)
 {
-
+/*
+	auto vtx = createSE3Node(gpose);
+	vtx->setFixed(true);
+	f->node->setFixed(false);
+	auto infMat = calculateInformationMatrix();
+	auto relativeMovement = f->odometry.inverse() * gpose;
+	auto edge = createSE3Edge(f->node, vtx, relativeMovement, infMat);
+*/
+	auto infMat = calculateInformationMatrix();
+	auto edge = createSE3PriorEdge(f->node, gpose, infMat);
+	addRobustKernel(edge, "Huber", 0.1);
 }
 
 

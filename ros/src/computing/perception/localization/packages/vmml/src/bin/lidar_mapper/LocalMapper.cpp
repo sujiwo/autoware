@@ -55,7 +55,6 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	feedResult.timestamp = messageTime;
 
 	if (scanId==parent.generalParams.startId) {
-		parent.addNewScanFrame(scanId, messageTime, Pose::Identity(), 0.0);
 		feedResult.hasScanFrame = true;
 		lastScanFrame = scanId;
 	}
@@ -117,8 +116,10 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 
 		// add to pose graph
 		accum_distance += lastMapShift.translation().norm();
-		parent.addNewScanFrame(scanId, messageTime, current_pose, accum_distance, mNdt.getFitnessScore());
+		feedResult.accum_distance = accum_distance;
+//		parent.addNewScanFrame(scanId, messageTime, current_pose, accum_distance, mNdt.getFitnessScore());
 
+		// tell parent to create new scanframe
 		feedResult.hasScanFrame = true;
 		feedResult.prevScanFrame = lastScanFrame;
 		lastScanFrame = scanId;
@@ -156,7 +157,8 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	feedResult.hasConverged = mNdt.hasConverged();
 	feedResult.transformation_probability = mNdt.getTransformationProbability();
 
-	scanResults[scanId] = feedResult;
+//	scanResults[scanId] = feedResult;
+	scanResults.insert(make_pair(scanId, feedResult));
 }
 
 

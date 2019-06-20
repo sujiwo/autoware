@@ -99,22 +99,28 @@ LidarMapper::build()
 {
 	buildGnssTrajectory();
 
-	for (int i=generalParams.startId, c=0; i<=generalParams.stopId; ++i, ++c) {
+	for (int bagId=generalParams.startId, c=0; bagId<=generalParams.stopId; ++bagId, ++c) {
 
 		ptime messageTime;
-		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(i, &messageTime);
-		auto currentScan3 = lidarBag->getFiltered<pcl::PointXYZ>(i);
+		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(bagId, &messageTime);
+		auto currentScan3 = lidarBag->getFiltered<pcl::PointXYZ>(bagId);
 
 		thread local ([&, this] {
-			localMapperProc->feed(currentScan4, messageTime, i);
+			localMapperProc->feed(currentScan4, messageTime, bagId);
 		});
 
 		thread global ([&, this] {
-			globalMapperProc->feed(currentScan3, messageTime, i);
+			globalMapperProc->feed(currentScan3, messageTime, bagId);
 		});
 
 		local.join();
 		global.join();
+
+		const auto &localScanLog = localMapperProc->getScanLog(bagId);
+		const auto &globalScanLog = globalMapperProc->getScanLog(bagId);
+		if (localScanLog.hasScanFrame==true) {
+			addNewScanFrame(bagId);
+		}
 
 		// Check if we need to kick off Pose Graph Optimization
 		if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger) {
@@ -223,14 +229,46 @@ LidarMapper::getGnssPose(const ptime &t) const
 
 
 void
-LidarMapper::addNewScanFrame(int64_t bId, ptime timestamp, Pose odom, double accum_distance, double fitnessScore)
+LidarMapper::addNewScanFrame(int64 bagId)
 {
-	Pose gnssPose = getGnssPose(timestamp);
-	auto scanfr = ScanFrame::create(bId, timestamp, odom, gnssPose, accum_distance);
-	scanfr->fitnessScore = fitnessScore;
-	// G2O node will be computed later
-	scanFrameQueue.push_back(scanfr);
-	elapsed_distance_for_optimization += accum_distance;
+	const auto &localScanLog = localMapperProc->getScanLog(bagId);
+	const auto &globalScanLog = globalMapperProc->getScanLog(bagId);
+
+	if (localScanLog.hasScanFrame==false)
+		return;
+
+
+	const ptime &t=localScanLog.timestamp;
+	Pose gnssPose = getGnssPose(t);
+
+	ScanFrame::Ptr newScan;
+
+	if (bagId==generalParams.startId) {
+		newScan = ScanFrame::create(bagId, t, gnssPose, gnssPose, localScanLog.accum_distance);
+	}
+
+	else {
+		const auto &prevLocalLog = localMapperProc->getScanLog(localScanLog.prevScanFrame);
+		TTransform odomMove = prevLocalLog.poseAtScan.inverse() * localScanLog.poseAtScan;
+		Pose newpose = graph->lastFrame()->odometry * odomMove;
+		newScan = ScanFrame::create(bagId, t, newpose, gnssPose, localScanLog.accum_distance);
+	}
+
+	elapsed_distance_for_optimization += localScanLog.accum_distance;
+	graph->addScanFrame(newScan);
+	scanFrameQueue.push_back(newScan);
+
+	// XXX: thresholding here ?
+	if (globalScanLog.fitness_score < 1.0) {
+		cout << "Use global match for #" << bagId << endl;
+		graph->addGlobalPose(newScan, globalScanLog.poseAtScan);
+	}
+
+	// use GNSS pose instead ?
+	else {
+		cout << "Use GNSS for #" << bagId << endl;
+		graph->addGlobalPose(newScan, gnssPose);
+	}
 }
 
 
@@ -239,21 +277,6 @@ LidarMapper::flushScanQueue()
 {
 	if (scanFrameQueue.empty())
 		return;
-
-	for (auto &frame: scanFrameQueue) {
-		graph->addScanFrame(frame);
-
-		auto globalMatchRes = globalMapperProc->getScanLog(frame->bagId);
-		// XXX: thresholding here ?
-		if (globalMatchRes.fitness_score < 1.0) {
-
-		}
-
-		// use GNSS pose instead ?
-		else {
-
-		}
-	}
 
 	cout << "Added " << scanFrameQueue.size() << " new frames" << endl;
 
