@@ -242,6 +242,7 @@ LidarMapper::addNewScanFrame(int64 bagId)
 	Pose gnssPose = getGnssPose(t);
 
 	ScanFrame::Ptr newScan;
+	double diffDistance = 0.0;
 
 	if (bagId==generalParams.startId) {
 		newScan = ScanFrame::create(bagId, t, gnssPose, gnssPose, localScanLog.accum_distance);
@@ -252,9 +253,10 @@ LidarMapper::addNewScanFrame(int64 bagId)
 		TTransform odomMove = prevLocalLog.poseAtScan.inverse() * localScanLog.poseAtScan;
 		Pose newpose = graph->lastFrame()->odometry * odomMove;
 		newScan = ScanFrame::create(bagId, t, newpose, gnssPose, localScanLog.accum_distance);
+		diffDistance = localScanLog.accum_distance - prevLocalLog.accum_distance;
 	}
 
-	elapsed_distance_for_optimization += localScanLog.accum_distance;
+	elapsed_distance_for_optimization += diffDistance;
 	graph->addScanFrame(newScan);
 	scanFrameQueue.push_back(newScan);
 
