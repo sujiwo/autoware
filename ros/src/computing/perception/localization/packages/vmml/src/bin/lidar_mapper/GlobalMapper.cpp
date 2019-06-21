@@ -7,11 +7,45 @@
 
 #include <cstdio>
 #include <pcl/io/pcd_io.h>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 #include "LidarMapper.h"
 
 
 using namespace std;
+
+
+namespace boost {
+namespace serialization {
+
+template <class Archive>
+void serialize(Archive &ar, LidarMapper::GlobalMapper::ScanProcessLog &log, unsigned int version)
+{
+	ar
+		& log.sequence_num
+		& log.timestamp
+		& log.numOfScanPoints
+		& log.filteredScanPoints
+		& log.mapNumOfPoints
+		& log.hasConverged
+		& log.fitness_score
+		& log.transformation_probability
+		& log.num_of_iteration
+		& log.poseAtScan
+		& log.shift
+		& log.submap_size
+		& log.submap_origin_stamp
+		& log.submap_origin_pose
+		& log.hasScanFrame
+		& log.prevScanFrame
+		& log.accum_distance
+		& log.gnssIsUsed;
+}
+
+}
+}
+
 
 
 namespace LidarMapper {
@@ -132,6 +166,21 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 	return;
 }
 
+
+void
+GlobalMapper::saveLog(fstream &output) const
+{
+	boost::archive::binary_oarchive logger(output);
+	logger << scanResults;
+}
+
+
+void
+GlobalMapper::readLog(fstream &input)
+{
+	boost::archive::binary_iarchive logInput(input);
+	logInput >> scanResults;
+}
 
 
 }	// namespace LidarMapper

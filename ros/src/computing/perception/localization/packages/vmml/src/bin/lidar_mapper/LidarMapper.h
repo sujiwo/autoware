@@ -8,10 +8,12 @@
 #ifndef _LIDARMAPPER_H_
 #define _LIDARMAPPER_H_
 
+#include <fstream>
 #include <string>
 #include <deque>
 #include <map>
 #include <limits>
+#include <functional>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -107,6 +109,9 @@ friend class LidarMapper;
 	inline const ScanProcessLog& getScanLog(const int64 scanID) const
 	{ return scanResults.at(scanID); }
 
+	void saveLog(std::fstream &output) const;
+	void readLog(std::fstream &input);
+
 protected:
 	Param param;
 	LidarMapper &parent;
@@ -180,6 +185,9 @@ public:
 	inline const ScanProcessLog& getScanLog(const int64 scanID) const
 	{ return scanResults.at(scanID); }
 
+	void saveLog(std::fstream &output) const;
+	void readLog(std::fstream &input);
+
 protected:
 	Param param;
 	LidarMapper &parent;
@@ -224,6 +232,8 @@ public:
 			min_edge_interval,
 			accum_distance_thresh,
 			max_loop_distance;
+
+		bool scanOnly = false;
 	};
 
 	friend class GlobalMapper;
@@ -235,6 +245,8 @@ public:
 	virtual ~LidarMapper();
 
 	void build();
+
+	void buildScanOnly();
 
 	void buildGnssTrajectory();
 
@@ -257,6 +269,8 @@ public:
 
 	const inipp::Ini<char>& getRootConfig() const
 	{ return rootConfiguration; }
+
+	void optimizeOnly();
 
 protected:
 
@@ -294,6 +308,10 @@ protected:
 	void detectLoopInGnssTrajectory(std::vector<std::pair<uint32_t,uint32_t>> &) const;
 
 	void addNewScanFrame(int64 bagId);
+
+	void doScan(std::function<void(int64)> callback=nullptr);
+
+	void scanResultCallback(int64 bagId);
 
 	void flushScanQueue();
 };

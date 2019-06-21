@@ -83,6 +83,9 @@ LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::pa
 	// Other important objects
 	graph = PoseGraph::Ptr(new PoseGraph(*this));
 	loopDetector = LoopDetector::Ptr(new LoopDetector(*this));
+
+	// Making sure GNSS trajectory always available
+	buildGnssTrajectory();
 }
 
 
@@ -97,9 +100,82 @@ LidarMapper::~LidarMapper() {
 void
 LidarMapper::build()
 {
-	buildGnssTrajectory();
+	doScan([&, this](int64 bagId)
+		{ return scanResultCallback(bagId); }
+	);
 
-	for (int bagId=generalParams.startId, c=0; bagId<=generalParams.stopId; ++bagId, ++c) {
+	// XXX: Temporary
+	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
+	auto vecTrack = graph->dumpTrajectory();
+	vecTrack.dump((workDir/"track_optimized.csv").string());
+}
+
+
+/*
+ * A variant of the above, only doing scans and logging.
+ * Optimization will be performed later
+ */
+void
+LidarMapper::buildScanOnly()
+{
+	auto resultLogFilename = workDir / "results.log";
+
+	if (boost::filesystem::exists(resultLogFilename)) {
+		std::fstream logging;
+		logging.open(resultLogFilename.string(), std::fstream::in);
+		localMapperProc->readLog(logging);
+		globalMapperProc->readLog(logging);
+		cout << "Results from previous run loaded" << endl;
+		optimizeOnly();
+	}
+
+	else {
+
+		doScan();
+
+		std::fstream logging;
+		logging.open(resultLogFilename.string(), std::fstream::out | std::fstream::trunc);
+		localMapperProc->saveLog(logging);
+		globalMapperProc->saveLog(logging);
+	}
+}
+
+
+void
+LidarMapper::optimizeOnly()
+{
+	assert(localMapperProc->scanResults.size() == globalMapperProc->scanResults.size());
+
+	for (int64 bagId=generalParams.startId, c=0; bagId<=generalParams.stopId; ++bagId, ++c) {
+		scanResultCallback(bagId);
+		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
+	}
+}
+
+
+void
+LidarMapper::scanResultCallback(int64 bagId)
+{
+	const auto &localScanLog = localMapperProc->getScanLog(bagId);
+	const auto &globalScanLog = globalMapperProc->getScanLog(bagId);
+	if (localScanLog.hasScanFrame==true) {
+		addNewScanFrame(bagId);
+	}
+
+	// Check if we need to kick off Pose Graph Optimization
+	if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger) {
+		cout << "Optimization started" << endl;
+		flushScanQueue();
+		// XXX: Check
+		graph->optimize(1024);
+	}
+}
+
+
+void
+LidarMapper::doScan(std::function<void(int64)> callback)
+{
+	for (int64 bagId=generalParams.startId, c=0; bagId<=generalParams.stopId; ++bagId, ++c) {
 
 		ptime messageTime;
 		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(bagId, &messageTime);
@@ -116,27 +192,11 @@ LidarMapper::build()
 		local.join();
 		global.join();
 
-		const auto &localScanLog = localMapperProc->getScanLog(bagId);
-		const auto &globalScanLog = globalMapperProc->getScanLog(bagId);
-		if (localScanLog.hasScanFrame==true) {
-			addNewScanFrame(bagId);
-		}
-
-		// Check if we need to kick off Pose Graph Optimization
-		if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger) {
-			cout << "Optimization started" << endl;
-			flushScanQueue();
-			// XXX: Check
-			graph->optimize(1024);
-		}
+		if (callback==nullptr) {}
+		else callback(bagId);
 
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
 	}
-
-	// XXX: Temporary
-	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
-	auto vecTrack = graph->dumpTrajectory();
-	vecTrack.dump((workDir/"track_optimized.csv").string());
 }
 
 
@@ -147,7 +207,10 @@ int
 LidarMapper::createMapFromBag(const std::string &bagpath, const std::string &workingDirectoryPath)
 {
 	LidarMapper lidarMapperInstance(bagpath, workingDirectoryPath);
-	lidarMapperInstance.build();
+	if (lidarMapperInstance.generalParams.scanOnly==false)
+		lidarMapperInstance.build();
+	else
+		lidarMapperInstance.buildScanOnly();
 
 	return 0;
 }
@@ -192,6 +255,7 @@ LidarMapper::parseConfiguration(
 	string startIdstr, stopIdstr;
 	inipp::extract(ini.sections["General"]["start"], startIdstr);
 	inipp::extract(ini.sections["General"]["stop"], stopIdstr);
+	inipp::extract(ini.sections["General"]["scan only"], gen.scanOnly);
 
 	gen.startInp = InputOffsetPosition::parseString(startIdstr);
 	gen.stopInp = InputOffsetPosition::parseString(stopIdstr);

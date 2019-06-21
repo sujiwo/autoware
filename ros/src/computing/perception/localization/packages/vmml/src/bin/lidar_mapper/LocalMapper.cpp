@@ -5,6 +5,9 @@
  *      Author: sujiwo
  */
 
+#include <boost/serialization/map.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 #include <pcl/common/transforms.h>
 #include <pcl/io/pcd_io.h>
@@ -17,6 +20,36 @@ using pcl::PointXYZI;
 
 using namespace std;
 using namespace Eigen;
+
+
+namespace boost {
+namespace serialization {
+
+template <class Archive>
+void serialize(Archive &ar, LidarMapper::LocalMapper::ScanProcessLog &log, unsigned int version)
+{
+	ar
+		& log.sequence_num
+		& log.timestamp
+		& log.numOfScanPoints
+		& log.filteredScanPoints
+		& log.mapNumOfPoints
+		& log.hasConverged
+		& log.fitness_score
+		& log.transformation_probability
+		& log.num_of_iteration
+		& log.poseAtScan
+		& log.shift
+		& log.submap_size
+		& log.submap_origin_stamp
+		& log.submap_origin_pose
+		& log.hasScanFrame
+		& log.prevScanFrame
+		& log.accum_distance;
+}
+
+}
+}
 
 
 namespace LidarMapper {
@@ -188,6 +221,23 @@ string LocalMapper::generateSubmapPcdName()
 	ss << td.total_seconds() << '_' << currentScanId << ".pcd";
 	return ss.str();
 }
+
+
+void
+LocalMapper::saveLog(std::fstream &output) const
+{
+	boost::archive::binary_oarchive logger(output);
+	logger << scanResults;
+}
+
+
+void
+LocalMapper::readLog(std::fstream &input)
+{
+	boost::archive::binary_iarchive logInput(input);
+	logInput >> scanResults;
+}
+
 
 
 }	// namespace LidarMapper
