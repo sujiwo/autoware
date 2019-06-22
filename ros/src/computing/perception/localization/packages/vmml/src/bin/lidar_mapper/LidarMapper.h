@@ -57,6 +57,8 @@ struct InputOffsetPosition {
 };
 
 
+typedef pcl::PointXYZ ResultMapPointT;
+
 
 class LocalMapper {
 public:
@@ -271,6 +273,9 @@ public:
 	{ return rootConfiguration; }
 
 	void optimizeOnly();
+
+	inline LidarScanBag2::Ptr getLidarBag()
+	{ return lidarBag; }
 
 protected:
 

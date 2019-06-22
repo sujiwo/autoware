@@ -244,4 +244,21 @@ PoseGraph::dumpTrajectory() const
 	return frames;
 }
 
+
+pcl::PointCloud<ResultMapPointT>::Ptr
+PoseGraph::createPointCloud ()
+{
+	pcl::PointCloud<ResultMapPointT>::Ptr newMap(new pcl::PointCloud<ResultMapPointT>);
+
+	for (auto frame: frameList) {
+		auto frameScan = parent.getLidarBag()->getFiltered<ResultMapPointT>(frame->bagId);
+		TTransform scanTrf = frame->getPose();
+		pcl::PointCloud<ResultMapPointT> transformedScan;
+		pcl::transformPointCloud(*frameScan, transformedScan, scanTrf.matrix().cast<float>());
+		*newMap += transformedScan;
+	}
+
+	return newMap;
+}
+
 } /* namespace LidarMapper */

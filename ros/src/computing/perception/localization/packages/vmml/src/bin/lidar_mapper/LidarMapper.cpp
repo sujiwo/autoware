@@ -119,18 +119,27 @@ void
 LidarMapper::buildScanOnly()
 {
 	auto resultLogFilename = workDir / "results.log";
+	auto resultPcdMap = workDir / "result_map.pcd";
 
-	if (boost::filesystem::exists(resultLogFilename)) {
+	// Check if result log file is valid
+	if (boost::filesystem::exists(resultLogFilename) and
+		last_write_time(resultLogFilename) > last_write_time(workDir/ConfigurationFilename)) {
+
 		std::fstream logging;
 		logging.open(resultLogFilename.string(), std::fstream::in);
 		localMapperProc->readLog(logging);
 		globalMapperProc->readLog(logging);
 		cout << "Results from previous run loaded" << endl;
 		optimizeOnly();
+
+		auto pcdMap = graph->createPointCloud();
+		pcl::io::savePCDFile(resultPcdMap.string(), *pcdMap);
+		cout << "Map dumped to " << resultPcdMap.string() << endl;
 	}
 
 	else {
 
+		cout << "Result log file not valid" << endl;
 		doScan();
 
 		std::fstream logging;
@@ -150,6 +159,10 @@ LidarMapper::optimizeOnly()
 		scanResultCallback(bagId);
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
 	}
+
+	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
+	auto vecTrack = graph->dumpTrajectory();
+	vecTrack.dump((workDir/"track_optimized.csv").string());
 }
 
 
@@ -163,7 +176,8 @@ LidarMapper::scanResultCallback(int64 bagId)
 	}
 
 	// Check if we need to kick off Pose Graph Optimization
-	if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger) {
+	if (elapsed_distance_for_optimization >= generalParams.optimization_distance_trigger or
+		bagId==generalParams.stopId) {
 		cout << "Optimization started" << endl;
 		flushScanQueue();
 		// XXX: Check
@@ -300,7 +314,6 @@ LidarMapper::addNewScanFrame(int64 bagId)
 
 	if (localScanLog.hasScanFrame==false)
 		return;
-
 
 	const ptime &t=localScanLog.timestamp;
 	Pose gnssPose = getGnssPose(t);

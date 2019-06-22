@@ -71,6 +71,10 @@ public:
 
 	const Trajectory dumpTrajectory() const;
 
+	pcl::PointCloud<pcl::PointXYZ>::Ptr
+	createPointCloud ();
+
+
 protected:
 	LidarMapper &parent;
 
