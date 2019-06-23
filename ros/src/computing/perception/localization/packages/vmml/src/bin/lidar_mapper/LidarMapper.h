@@ -94,6 +94,7 @@ friend class LidarMapper;
 		double submap_size = 0;
 		ptime submap_origin_stamp;
 		Pose submap_origin_pose;
+		tduration matchingTime 				= boost::posix_time::seconds(0);
 
 		bool hasScanFrame					= false;
 		int64 prevScanFrame					= -1;
@@ -276,6 +277,8 @@ public:
 
 	inline LidarScanBag2::Ptr getLidarBag()
 	{ return lidarBag; }
+
+	void dumpStatistics();
 
 protected:
 

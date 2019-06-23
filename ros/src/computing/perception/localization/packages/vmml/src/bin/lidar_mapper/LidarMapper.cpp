@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <thread>
+#include <algorithm>
 
 #include "LidarMapper.h"
 
@@ -133,13 +134,15 @@ LidarMapper::buildScanOnly()
 		optimizeOnly();
 
 		auto pcdMap = graph->createPointCloud();
-		pcl::io::savePCDFile(resultPcdMap.string(), *pcdMap);
+		pcl::io::savePCDFileBinary(resultPcdMap.string(), *pcdMap);
 		cout << "Map dumped to " << resultPcdMap.string() << endl;
+
+		dumpStatistics();
 	}
 
 	else {
 
-		cout << "Result log file not valid" << endl;
+		cout << "Result log file not valid; rescanning" << endl;
 		doScan();
 
 		std::fstream logging;
@@ -389,6 +392,39 @@ LidarMapper::buildGnssTrajectory()
 
 	gnssTrajectory.dump((workDir / "gnss-full.csv").string());
 	gnssSubsetTrack.dump((workDir / "gnss.csv").string());
+}
+
+
+template<typename K, typename V>
+std::vector<K> extractKeys(const std::map<K,V> &maps)
+{
+	vector<K> keys;
+	keys.reserve(maps.size());
+	for (auto &pair: maps) {
+		keys.push_back(pair.first);
+	}
+	return keys;
+}
+
+
+void
+LidarMapper::dumpStatistics()
+{
+	const auto statFilename = workDir / "scanning_stats.csv";
+
+	std::fstream statfd(statFilename.string(), std::fstream::trunc|std::fstream::out);
+
+	auto bagIds = extractKeys(localMapperProc->scanResults);
+	for (auto bid: bagIds) {
+		auto globalLog = globalMapperProc->getScanLog(bid);
+		auto localLog = localMapperProc->getScanLog(bid);
+		statfd 	<< bid << ' '
+				<< globalLog.gnssIsUsed << ' '
+				<< globalLog.fitness_score << ' '
+				<< endl;
+	}
+
+	statfd.close();
 }
 
 

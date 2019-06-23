@@ -74,6 +74,8 @@ public:
 	pcl::PointCloud<pcl::PointXYZ>::Ptr
 	createPointCloud ();
 
+	void frameLogsDump() const;
+
 
 protected:
 	LidarMapper &parent;

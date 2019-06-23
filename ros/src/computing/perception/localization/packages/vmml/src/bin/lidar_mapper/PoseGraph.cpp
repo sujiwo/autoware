@@ -11,6 +11,8 @@
 #include <g2o/solvers/pcg/linear_solver_pcg.h>
 #include <g2o/solvers/cholmod/linear_solver_cholmod.h>
 
+#include <pcl/filters/voxel_grid.h>
+
 #include "PoseGraph.h"
 #include "LidarMapper.h"
 
@@ -258,7 +260,21 @@ PoseGraph::createPointCloud ()
 		*newMap += transformedScan;
 	}
 
-	return newMap;
+	// XXX: voxel grid filter is ineffective for large maps
+	pcl::PointCloud<ResultMapPointT>::Ptr filteredGridCLoud(new pcl::PointCloud<ResultMapPointT>);
+	pcl::VoxelGrid<ResultMapPointT> voxel_grid_filter;
+	voxel_grid_filter.setLeafSize(0.2, 0.2, 0.2);
+	voxel_grid_filter.setInputCloud(newMap);
+	voxel_grid_filter.filter(*filteredGridCLoud);
+
+	return filteredGridCLoud;
+}
+
+
+void
+PoseGraph::frameLogsDump() const
+{
+
 }
 
 } /* namespace LidarMapper */

@@ -40,7 +40,8 @@ void serialize(Archive &ar, LidarMapper::GlobalMapper::ScanProcessLog &log, unsi
 		& log.hasScanFrame
 		& log.prevScanFrame
 		& log.accum_distance
-		& log.gnssIsUsed;
+		& log.gnssIsUsed
+		& log.matchingTime;
 }
 
 }
@@ -115,6 +116,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 			throw curResult;
 		}
 
+		// XXX: Dubious threshold
 		else if (fitness_score>=500.0) {
 			guessPose = current_gnss_pose;
 			curResult.gnssIsUsed = true;
@@ -125,13 +127,16 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 			Vector3d rot = quaternionToRPY(lastDisplacement.orientation());
 			TTransform guessDisplacement = TTransform::from_XYZ_RPY(lastDisplacement.translation(), 0, 0, rot.z());
 			guessPose = previous_pose * guessDisplacement;
-			curResult.gnssIsUsed = true;
+			curResult.gnssIsUsed = false;
 		}
 
+		ptime trun1 = getCurrentTime();
 		GlobalMapperCloud::Ptr output_cloud(new GlobalMapperCloud);
 		mNdt.setInputSource(newScan);
 		mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
 		Pose ndtPose = mNdt.getFinalTransformation().cast<double>();
+		ptime trun2 = getCurrentTime();
+		curResult.matchingTime = trun2 - trun1;
 
 		// Calculate difference between NDT pose and predicted pose
 		double predict_pose_error = (ndtPose.position()-guessPose.position()).norm();

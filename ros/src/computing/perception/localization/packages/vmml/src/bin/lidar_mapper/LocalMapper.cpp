@@ -45,7 +45,8 @@ void serialize(Archive &ar, LidarMapper::LocalMapper::ScanProcessLog &log, unsig
 		& log.submap_origin_pose
 		& log.hasScanFrame
 		& log.prevScanFrame
-		& log.accum_distance;
+		& log.accum_distance
+		& log.matchingTime;
 }
 
 }
@@ -122,7 +123,11 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	Pose guessPose = previous_pose * guessDisplacement;
 
 	LocalMapperCloud::Ptr output_cloud(new LocalMapperCloud);
+
+	ptime trun1 = getCurrentTime();
 	mNdt.align(*output_cloud, guessPose.matrix().cast<float>());
+	ptime trun2 = getCurrentTime();
+	feedResult.matchingTime = trun2 - trun1;
 
 	TTransform t_localizer = mNdt.getFinalTransformation().cast<double>();
 
@@ -150,7 +155,6 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 		// add to pose graph
 		accum_distance += lastMapShift.translation().norm();
 		feedResult.accum_distance = accum_distance;
-//		parent.addNewScanFrame(scanId, messageTime, current_pose, accum_distance, mNdt.getFitnessScore());
 
 		// tell parent to create new scanframe
 		feedResult.hasScanFrame = true;
@@ -172,7 +176,7 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	if (submap_size >= param.max_submap_size) {
 		if (currentSubmap.size() != 0) {
 
-			outputCurrentSubmap();
+//			outputCurrentSubmap();
 
 			currentMap = currentSubmap;
 			currentSubmap.clear();
