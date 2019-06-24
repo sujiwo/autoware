@@ -421,6 +421,7 @@ LidarMapper::dumpStatistics()
 		statfd 	<< bid << ' '
 				<< globalLog.gnssIsUsed << ' '
 				<< globalLog.fitness_score << ' '
+				<< globalLog.transformation_probability << ' '
 				<< endl;
 	}
 

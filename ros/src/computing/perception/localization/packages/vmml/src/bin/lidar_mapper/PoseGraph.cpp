@@ -251,23 +251,37 @@ pcl::PointCloud<ResultMapPointT>::Ptr
 PoseGraph::createPointCloud ()
 {
 	pcl::PointCloud<ResultMapPointT>::Ptr newMap(new pcl::PointCloud<ResultMapPointT>);
+	pcl::PointCloud<ResultMapPointT>::Ptr submap(new pcl::PointCloud<ResultMapPointT>);
+	int64 submapId = parent.localMapperProc->getScanLog(frameList.front()->bagId).submap_id;
 
 	for (auto frame: frameList) {
-		auto frameScan = parent.getLidarBag()->getFiltered<ResultMapPointT>(frame->bagId);
+		auto bagId = frame->bagId;
+		auto frameSubmapId = parent.localMapperProc->getScanLog(bagId).submap_id;
+
+		auto frameScan = parent.getLidarBag()->getFiltered<ResultMapPointT>(bagId);
 		TTransform scanTrf = frame->getPose();
 		pcl::PointCloud<ResultMapPointT> transformedScan;
 		pcl::transformPointCloud(*frameScan, transformedScan, scanTrf.matrix().cast<float>());
-		*newMap += transformedScan;
+
+		if (frameSubmapId==submapId) {
+		}
+
+		else {
+			// Filter the submap
+			pcl::PointCloud<ResultMapPointT>::Ptr filteredGridCLoud(new pcl::PointCloud<ResultMapPointT>);
+			pcl::VoxelGrid<ResultMapPointT> voxel_grid_filter;
+			voxel_grid_filter.setLeafSize(0.2, 0.2, 0.2);
+			voxel_grid_filter.setInputCloud(submap);
+			voxel_grid_filter.filter(*filteredGridCLoud);
+
+			*newMap += *filteredGridCLoud;
+			submap->clear();
+		}
+
+		*submap += transformedScan;
 	}
 
-	// XXX: voxel grid filter is ineffective for large maps
-	pcl::PointCloud<ResultMapPointT>::Ptr filteredGridCLoud(new pcl::PointCloud<ResultMapPointT>);
-	pcl::VoxelGrid<ResultMapPointT> voxel_grid_filter;
-	voxel_grid_filter.setLeafSize(0.2, 0.2, 0.2);
-	voxel_grid_filter.setInputCloud(newMap);
-	voxel_grid_filter.filter(*filteredGridCLoud);
-
-	return filteredGridCLoud;
+	return newMap;
 }
 
 

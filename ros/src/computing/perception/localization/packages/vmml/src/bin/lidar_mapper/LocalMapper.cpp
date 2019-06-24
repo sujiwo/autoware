@@ -40,6 +40,7 @@ void serialize(Archive &ar, LidarMapper::LocalMapper::ScanProcessLog &log, unsig
 		& log.num_of_iteration
 		& log.poseAtScan
 		& log.shift
+		& log.submap_id
 		& log.submap_size
 		& log.submap_origin_stamp
 		& log.submap_origin_pose
@@ -171,6 +172,7 @@ LocalMapper::feed(LocalMapperCloud::ConstPtr newScan, const ptime &messageTime, 
 	// Update position
 	previous_pose = current_pose;
 	feedResult.poseAtScan = current_pose;
+	feedResult.submap_id = submap_id;
 
 	// Output submap file after a certain threshold
 	if (submap_size >= param.max_submap_size) {

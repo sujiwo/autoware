@@ -14,7 +14,7 @@
 #include <limits>
 
 // Change to whichever version of NDT you like
-#include <pcl/registration/ndt.h>
+#include <pclomp/ndt_omp.h>
 
 #include "ScanFrame.h"
 #include "utilities.h"
@@ -68,7 +68,7 @@ protected:
 	LidarMapper &parent;
 
 	// Special matcher for loop detector
-	pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> matcher;
+	pclomp::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> matcher;
 
 	double
 		distanceFromLastEdgeThreshold,

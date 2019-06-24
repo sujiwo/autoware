@@ -18,7 +18,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <pcl/registration/ndt.h>
+#include <pclomp/ndt_omp.h>
 #include <pcl/filters/voxel_grid.h>
 
 #include <boost/filesystem.hpp>
@@ -99,6 +99,7 @@ friend class LidarMapper;
 		bool hasScanFrame					= false;
 		int64 prevScanFrame					= -1;
 		double accum_distance				= 0.0;
+		uint32_t submap_id					= 0;
 
 		std::string dump();
 	};
@@ -121,7 +122,7 @@ protected:
 
 	// Need separate NDT instances due to possible different parameters
 //	pcl_omp::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
-	pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
+	pclomp::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
 	// Need our own voxel grid filter
 	pcl::VoxelGrid<pcl::PointXYZI> mVoxelGridFilter;
 
@@ -197,7 +198,7 @@ protected:
 	uint32_t currentScanId = 0;
 
 	GlobalMapperCloud::Ptr globalMap;
-	pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
+	pclomp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
 	Trajectory vehicleTrack;
 
 	// States
@@ -243,6 +244,7 @@ public:
 	friend class LocalMapper;
 	friend class ScanOdometry;
 	friend class LoopDetector;
+	friend class PoseGraph;
 
 	LidarMapper(const std::string &bagpath, const boost::filesystem::path &myWorkDir);
 	virtual ~LidarMapper();
