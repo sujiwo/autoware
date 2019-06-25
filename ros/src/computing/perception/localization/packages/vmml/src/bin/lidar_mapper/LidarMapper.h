@@ -18,6 +18,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <pcl/registration/registration.h>
 #include <pcl/registration/ndt.h>
 #include <pcl/filters/voxel_grid.h>
 
@@ -237,6 +238,8 @@ public:
 			max_loop_distance;
 
 		bool scanOnly = false;
+
+		std::string registrationMethod;
 	};
 
 	friend class GlobalMapper;
@@ -280,6 +283,19 @@ public:
 	{ return lidarBag; }
 
 	void dumpStatistics();
+
+	template<class PointT>
+	boost::shared_ptr<pcl::Registration<PointT, PointT>>
+	selectRegistration()
+	{
+		boost::shared_ptr<pcl::Registration<PointT, PointT>> registrar;
+
+		// XXX: Change this
+		if (generalParams.registrationMethod=="NDT")
+			registrar.reset(new pcl::NormalDistributionsTransform<PointT, PointT>);
+		return registrar;
+	}
+
 
 protected:
 

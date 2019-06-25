@@ -6,7 +6,10 @@
  */
 
 #include <iostream>
+#include <vector>
+#include <memory>
 
+#include <pcl/registration/registration.h>
 #include "LidarMapper.h"
 
 

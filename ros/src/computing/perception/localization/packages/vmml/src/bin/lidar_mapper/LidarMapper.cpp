@@ -283,6 +283,7 @@ LidarMapper::parseConfiguration(
 	string startIdstr, stopIdstr;
 	inipp::extract(ini.sections["General"]["start"], startIdstr);
 	inipp::extract(ini.sections["General"]["stop"], stopIdstr);
+	inipp::extract(ini.sections["General"]["registration"], gen.registrationMethod);
 	inipp::extract(ini.sections["General"]["scan only"], gen.scanOnly);
 
 	gen.startInp = InputOffsetPosition::parseString(startIdstr);
