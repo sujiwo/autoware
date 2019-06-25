@@ -267,6 +267,11 @@ PoseGraph::createPointCloud ()
 		}
 
 		else {
+			auto currentSubmapPath = parent.workDir/"submaps";
+			currentSubmapPath /= std::to_string(submapId)+".pcd";
+			pcl::io::savePCDFileBinaryCompressed(currentSubmapPath.string(), *submap);
+			cout << "Outputting " << boost::filesystem::basename(currentSubmapPath) << endl;
+
 			// Filter the submap
 			pcl::PointCloud<ResultMapPointT>::Ptr filteredGridCLoud(new pcl::PointCloud<ResultMapPointT>);
 			pcl::VoxelGrid<ResultMapPointT> voxel_grid_filter;
@@ -276,6 +281,7 @@ PoseGraph::createPointCloud ()
 
 			*newMap += *filteredGridCLoud;
 			submap->clear();
+			submapId = frameSubmapId;
 		}
 
 		*submap += transformedScan;

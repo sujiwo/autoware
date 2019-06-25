@@ -31,7 +31,6 @@ find_package(catkin REQUIRED COMPONENTS
 	gnss
 	
 	# Test offline NDT localization
-	ndt_omp
 	pcl_omp_registration
 	velodyne_pointcloud
 )

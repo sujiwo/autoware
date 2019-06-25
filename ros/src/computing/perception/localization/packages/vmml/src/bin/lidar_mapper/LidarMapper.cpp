@@ -203,7 +203,7 @@ convertForGlobalMapper(pcl::PointCloud<pcl::PointXYZI>::ConstPtr source)
 void
 LidarMapper::doScan(std::function<void(int64)> callback)
 {
-	for (int64 bagId=generalParams.startId, c=0; bagId<=generalParams.stopId; ++bagId, ++c) {
+	for (int64 bagId=generalParams.startId, c=0; bagId<=generalParams.stopId; bagId++, ++c) {
 
 		ptime messageTime;
 		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(bagId, &messageTime);
@@ -433,6 +433,8 @@ LidarMapper::dumpStatistics()
 				<< globalLog.gnssIsUsed << ' '
 				<< globalLog.fitness_score << ' '
 				<< globalLog.transformation_probability << ' '
+				<< toSeconds(globalLog.matchingTime) << ' '
+				<< toSeconds(localLog.matchingTime) << ' '
 				<< endl;
 	}
 
