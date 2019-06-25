@@ -189,6 +189,17 @@ LidarMapper::scanResultCallback(int64 bagId)
 }
 
 
+pcl::PointCloud<pcl::PointXYZ>::ConstPtr
+convertForGlobalMapper(pcl::PointCloud<pcl::PointXYZI>::ConstPtr source)
+{
+	pcl::PointCloud<pcl::PointXYZ>::Ptr
+		converted(new pcl::PointCloud<pcl::PointXYZ>),
+		converted_filtered(new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::copyPointCloud(*source, *converted);
+	return LidarScanBag2::VoxelGridFilter<pcl::PointXYZ>(converted);
+}
+
+
 void
 LidarMapper::doScan(std::function<void(int64)> callback)
 {
@@ -196,13 +207,13 @@ LidarMapper::doScan(std::function<void(int64)> callback)
 
 		ptime messageTime;
 		auto currentScan4 = lidarBag->getUnfiltered<pcl::PointXYZI>(bagId, &messageTime);
-		auto currentScan3 = lidarBag->getFiltered<pcl::PointXYZ>(bagId);
 
 		thread local ([&, this] {
 			localMapperProc->feed(currentScan4, messageTime, bagId);
 		});
 
 		thread global ([&, this] {
+			auto currentScan3 = convertForGlobalMapper(currentScan4);
 			globalMapperProc->feed(currentScan3, messageTime, bagId);
 		});
 

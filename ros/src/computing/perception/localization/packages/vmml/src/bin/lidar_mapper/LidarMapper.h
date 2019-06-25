@@ -18,7 +18,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <pclomp/ndt_omp.h>
+#include <pcl/registration/ndt.h>
 #include <pcl/filters/voxel_grid.h>
 
 #include <boost/filesystem.hpp>
@@ -121,8 +121,7 @@ protected:
 	LidarMapper &parent;
 
 	// Need separate NDT instances due to possible different parameters
-//	pcl_omp::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
-	pclomp::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
+	pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> mNdt;
 	// Need our own voxel grid filter
 	pcl::VoxelGrid<pcl::PointXYZI> mVoxelGridFilter;
 
@@ -198,7 +197,7 @@ protected:
 	uint32_t currentScanId = 0;
 
 	GlobalMapperCloud::Ptr globalMap;
-	pclomp::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
+	pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> mNdt;
 	Trajectory vehicleTrack;
 
 	// States
