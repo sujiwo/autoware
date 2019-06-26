@@ -8,6 +8,8 @@
 #ifndef _LIDAR_MAPPER_SCANFRAME_H_
 #define _LIDAR_MAPPER_SCANFRAME_H_
 
+#include <string>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -51,6 +53,7 @@ struct ScanFrame {
 
 	g2o::VertexSE3* node=nullptr;		// node instance
 
+	std::string dump() const;
 };
 
 }

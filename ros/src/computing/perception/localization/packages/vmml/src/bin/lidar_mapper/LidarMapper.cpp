@@ -163,9 +163,10 @@ LidarMapper::optimizeOnly()
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
 	}
 
-	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
+//	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
 	auto vecTrack = graph->dumpTrajectory();
 	vecTrack.dump((workDir/"track_optimized.csv").string());
+	graph->frameLogsDump();
 }
 
 

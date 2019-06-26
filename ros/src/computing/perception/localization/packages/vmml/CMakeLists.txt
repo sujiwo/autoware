@@ -208,6 +208,7 @@ add_executable(
 		src/bin/lidar_mapper/GlobalMapper.cpp
 		src/bin/lidar_mapper/LoopDetector.cpp
 		src/bin/lidar_mapper/PoseGraph.cpp
+		src/bin/lidar_mapper/ScanFrame.cpp
 )
 
 target_link_libraries(

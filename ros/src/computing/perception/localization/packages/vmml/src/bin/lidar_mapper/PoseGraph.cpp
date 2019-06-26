@@ -294,7 +294,15 @@ PoseGraph::createPointCloud ()
 void
 PoseGraph::frameLogsDump() const
 {
+	auto frameDumpPath = parent.workDir / "frames.csv";
+	std::fstream fd(frameDumpPath.string(), std::fstream::ios_base::trunc|std::fstream::ios_base::out);
 
+	for (auto &f: frameList) {
+		auto s = f->dump();
+		fd << s << endl;
+	}
+
+	fd.close();
 }
 
 } /* namespace LidarMapper */

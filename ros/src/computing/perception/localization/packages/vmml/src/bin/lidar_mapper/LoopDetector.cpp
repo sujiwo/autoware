@@ -50,7 +50,11 @@ LoopDetector::findCandidates(const std::vector<ScanFrame::Ptr> &frameList, const
 			continue;
 		}
 
-		double dist = (kf->node->estimate().translation() - newScanFrame->node->estimate().translation()).norm();
+		// Take GNSS position
+		Vector3d
+			kfPos = kf->gnssPose.position(),
+			newFramePos = newScanFrame->gnssPose.position();
+		double dist = (kfPos - newFramePos).norm();
 		if (dist > maxLoopDistance) {
 			continue;
 		}
@@ -111,7 +115,7 @@ LoopDetector::validate(const std::vector<ScanFrame::Ptr> &candidateList, const S
 	}
 
 	if (best_score > fitness_score_threshold) {
-		cout << "Loop not found" << endl;
+//		cout << "Loop not found" << endl;
 		return nullptr;
 	}
 	else {
