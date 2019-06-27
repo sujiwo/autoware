@@ -100,7 +100,9 @@ LoopDetector::validate(const std::vector<ScanFrame::Ptr> &candidateList, const S
 	for (auto &candidate: candidateList) {
 		auto cloud2 = parent.lidarBag->getFiltered<PointT>(candidate->bagId);
 		matcher.setInputSource(cloud2);
-		Eigen::Matrix4f guess = (newScanFrame->node->estimate().inverse() * candidate->node->estimate()) .matrix().cast<float>();
+//		Eigen::Matrix4f guess = (newScanFrame->node->estimate().inverse() * candidate->node->estimate()) .matrix().cast<float>();
+		Eigen::Matrix4f guess = (newScanFrame->gnssPose.inverse() * candidate->gnssPose) .matrix().cast<float>();
+
 		matcher.align(aligned, guess);
 
 		cout << '.' << flush;
@@ -119,7 +121,7 @@ LoopDetector::validate(const std::vector<ScanFrame::Ptr> &candidateList, const S
 		return nullptr;
 	}
 	else {
-		cout << "Loop found" << endl;
+		cout << "Loop found: " << newScanFrame->bagId << "->" << bestMatch->bagId << endl;
 		lastAccumDistance = newScanFrame->accum_distance;
 	}
 
