@@ -20,6 +20,8 @@
 
 #include <pcl/registration/ndt.h>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/filter.h>
+#include <pcl/octree/octree.h>
 
 #include <boost/filesystem.hpp>
 
@@ -75,6 +77,7 @@ friend class LidarMapper;
 		double
 			voxel_leaf_size,
 			min_scan_range,
+			max_scan_range,
 			min_add_scan_shift,
 			max_submap_size;
 	};
@@ -168,7 +171,8 @@ public:
 		double
 			ndt_res,
 			step_size,
-			trans_eps;
+			trans_eps,
+			max_scan_range;
 		int
 			max_iter,
 			queue_size;
@@ -215,6 +219,10 @@ protected:
 		num_iterations;
 
 	std::map<int64, ScanProcessLog> scanResults;
+
+	pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>::Ptr octree;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr
+	findNearestInMap(const Pose &) const;
 
 };	// LidarMapper::GlobalMapper
 

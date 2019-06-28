@@ -61,7 +61,10 @@ LocalMapper::LocalMapper(LidarMapper &_parent, const LocalMapper::Param &p):
 	parent(_parent),
 	param(p)
 {
+	auto iniCfg = parent.getRootConfig();
+
 	// Parameter set
+	inipp::extract(iniCfg.sections["Local Mapping"]["max_scan_range"], param.max_scan_range);
 	mNdt.setResolution(param.ndt_res);
 	mNdt.setStepSize(param.step_size);
 	mNdt.setTransformationEpsilon(param.trans_eps);

@@ -7,6 +7,8 @@
 
 #include <cstdio>
 #include <pcl/io/pcd_io.h>
+#include <pcl/filters/crop_box.h>
+
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
@@ -48,6 +50,8 @@ void serialize(Archive &ar, LidarMapper::GlobalMapper::ScanProcessLog &log, unsi
 }
 
 
+typedef pcl::Filter<pcl::PointXYZ>::Ptr FilterPtr;
+
 
 namespace LidarMapper {
 
@@ -59,6 +63,13 @@ GlobalMapper::GlobalMapper(LidarMapper &_parent, const GlobalMapper::Param &p) :
 	param(p),
 	globalMap(new GlobalMapperCloud)
 {
+	auto iniCfg = parent.getRootConfig();
+
+	// Parameter set
+	inipp::extract(iniCfg.sections["Local Mapping"]["max_scan_range"], param.max_scan_range);
+	if (param.max_scan_range < parent.localMapperParameters.min_scan_range)
+		param.max_scan_range = 100.0;
+
 	auto pcdmap = parent.workDir / GlobalMapFilename;
 	loadMap(pcdmap.string());
 
@@ -76,9 +87,31 @@ void GlobalMapper::loadMap(const string &pcdFilename)
 		return;
 //		throw runtime_error("Unable to open map file: "+pcdFilename);
 	pcl::transformPointCloud(*globalMap, *globalMap, parent.worldToMap.matrix().cast<float>());
-	cout << "Initial Map loaded" << endl;
 
 	mNdt.setInputTarget(globalMap);
+
+	octree = pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>::Ptr(new pcl::octree::OctreePointCloudSearch<pcl::PointXYZ>(param.step_size));
+	octree->setInputCloud(globalMap);
+	octree->addPointsFromInputCloud();
+
+	cout << "Initial Map loaded" << endl;
+}
+
+
+GlobalMapper::GlobalMapperCloud::Ptr
+GlobalMapper::findNearestInMap(const Pose &pt) const
+{
+	pcl::PointXYZ queryPt(pt.x(), pt.y(), pt.z());
+	vector<int> indices;
+	vector<float> sqDist;
+	int n = octree->radiusSearch(queryPt, param.max_scan_range, indices, sqDist);
+
+	if (n==0)
+		return nullptr;
+	else {
+		GlobalMapperCloud::Ptr inBox(new GlobalMapperCloud(*globalMap, indices));
+		return inBox;
+	}
 }
 
 
@@ -129,6 +162,12 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 			guessPose = previous_pose * guessDisplacement;
 			curResult.gnssIsUsed = false;
 		}
+
+		// XXX: Filtering test
+/*
+		auto surroundsPcd = findNearestInMap(guessPose);
+		pcl::io::savePCDFileBinary("/tmp/box.pcd", *surroundsPcd);
+*/
 
 		ptime trun1 = getCurrentTime();
 		GlobalMapperCloud::Ptr output_cloud(new GlobalMapperCloud);
