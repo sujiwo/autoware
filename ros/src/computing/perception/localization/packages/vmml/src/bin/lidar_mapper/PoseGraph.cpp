@@ -11,6 +11,7 @@
 #include <g2o/solvers/pcg/linear_solver_pcg.h>
 #include <g2o/solvers/cholmod/linear_solver_cholmod.h>
 
+#include <pcl/octree/octree_search.h>
 #include <pcl/filters/voxel_grid.h>
 
 #include "PoseGraph.h"
@@ -267,17 +268,25 @@ PoseGraph::createPointCloud ()
 		}
 
 		else {
-			auto currentSubmapPath = parent.workDir/"submaps";
-			currentSubmapPath /= std::to_string(submapId)+".pcd";
-			pcl::io::savePCDFileBinaryCompressed(currentSubmapPath.string(), *submap);
-			cout << "Outputting " << boost::filesystem::basename(currentSubmapPath) << endl;
 
 			// Filter the submap
 			pcl::PointCloud<ResultMapPointT>::Ptr filteredGridCLoud(new pcl::PointCloud<ResultMapPointT>);
+			pcl::octree::OctreePointCloud<ResultMapPointT> octree(0.05);
+			octree.setInputCloud(submap);
+			octree.addPointsFromInputCloud();
+			octree.getOccupiedVoxelCenters(filteredGridCLoud->points);
+
+			auto currentSubmapPath = parent.workDir/"submaps";
+			currentSubmapPath /= std::to_string(submapId)+".pcd";
+
+			pcl::io::savePCDFileBinaryCompressed(currentSubmapPath.string(), *filteredGridCLoud);
+			cout << "Outputting " << boost::filesystem::basename(currentSubmapPath) << endl;
+/*
 			pcl::VoxelGrid<ResultMapPointT> voxel_grid_filter;
 			voxel_grid_filter.setLeafSize(0.2, 0.2, 0.2);
 			voxel_grid_filter.setInputCloud(submap);
 			voxel_grid_filter.filter(*filteredGridCLoud);
+*/
 
 			*newMap += *filteredGridCLoud;
 			submap->clear();

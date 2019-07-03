@@ -127,7 +127,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 
 		// Do nothing when prior map is not available
 		if (globalMap->empty()==true)
-			return;
+			throw curResult;
 
 		// see if position is available in GNSS trajectory
 		Pose guessPose, currentPose;
@@ -137,6 +137,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 			previous_pose = current_gnss_pose;
 			vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
 			curResult.gnssIsUsed = true;
+			curResult.fitness_score = 0.0;
 			throw curResult;
 		}
 
@@ -146,6 +147,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 			vehicleTrack.push_back(PoseStamped(currentPose, messageTime));
 			previous_pose = currentPose;
 			curResult.gnssIsUsed = true;
+			curResult.fitness_score = 0.0;
 			throw curResult;
 		}
 
@@ -182,6 +184,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 
 		if (predict_pose_error <= PREDICT_POSE_THRESHOLD) {
 			currentPose = ndtPose;
+			curResult.isValid = true;
 		}
 		else {
 			currentPose = guessPose;
@@ -205,6 +208,8 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 	// Logging
 	} catch (ScanProcessLog &spl) {
 		scanResults.insert(make_pair(scanId, spl));
+	} catch (std::exception &e) {
+		cerr << "Unknown exception: " << e.what() << endl;
 	}
 
 	return;
@@ -224,6 +229,13 @@ GlobalMapper::readLog(fstream &input)
 {
 	boost::archive::binary_iarchive logInput(input);
 	logInput >> scanResults;
+
+	// rebuild trajectory
+	vehicleTrack.clear();
+	for (auto &l: scanResults) {
+		PoseStamped p(l.second.poseAtScan, l.second.timestamp);
+		vehicleTrack.push_back(p);
+	}
 }
 
 

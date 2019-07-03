@@ -103,6 +103,7 @@ friend class LidarMapper;
 		int64 prevScanFrame					= -1;
 		double accum_distance				= 0.0;
 		uint32_t submap_id					= 0;
+		Twist currentVelocity;
 
 		std::string dump();
 	};
@@ -180,6 +181,7 @@ public:
 
 	struct ScanProcessLog : public LocalMapper::ScanProcessLog
 	{
+		bool isValid = false;
 		bool gnssIsUsed = false;
 	};
 

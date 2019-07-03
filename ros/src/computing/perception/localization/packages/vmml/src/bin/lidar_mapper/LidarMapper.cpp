@@ -156,14 +156,16 @@ LidarMapper::buildScanOnly()
 void
 LidarMapper::optimizeOnly()
 {
-	assert(localMapperProc->scanResults.size() == globalMapperProc->scanResults.size());
+	if (localMapperProc->scanResults.size() != globalMapperProc->scanResults.size()) {
+		cerr << "Global matching missed some frames; treated as untrusted" << endl;
+	}
 
 	for (int64 bagId=generalParams.startId, c=0; bagId<=generalParams.stopId; ++bagId, ++c) {
 		scanResultCallback(bagId);
 		cout << c+1 << '/' << generalParams.stopId-generalParams.startId << "      \r" << flush;
 	}
 
-//	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
+	globalMapperProc->vehicleTrack.dump((workDir / "ndt.csv").string());
 	auto vecTrack = graph->dumpTrajectory();
 	vecTrack.dump((workDir/"track_optimized.csv").string());
 	graph->frameLogsDump();
@@ -336,6 +338,7 @@ LidarMapper::addNewScanFrame(int64 bagId)
 
 	ScanFrame::Ptr newScan;
 	double diffDistance = 0.0;
+	Twist currentVelocity;
 
 	if (bagId==generalParams.startId) {
 		newScan = ScanFrame::create(bagId, t, gnssPose, gnssPose, localScanLog.accum_distance);
@@ -343,6 +346,9 @@ LidarMapper::addNewScanFrame(int64 bagId)
 
 	else {
 		const auto &prevLocalLog = localMapperProc->getScanLog(localScanLog.prevScanFrame);
+		const auto &prevFrameLog = localMapperProc->getScanLog(localScanLog.sequence_num-1);
+		currentVelocity = Twist(localScanLog.poseAtScan, prevFrameLog.poseAtScan,
+				toSeconds(localScanLog.timestamp-prevFrameLog.timestamp));
 		TTransform odomMove = prevLocalLog.poseAtScan.inverse() * localScanLog.poseAtScan;
 		Pose newpose = graph->lastFrame()->odometry * odomMove;
 		newScan = ScanFrame::create(bagId, t, newpose, gnssPose, localScanLog.accum_distance);
@@ -353,16 +359,23 @@ LidarMapper::addNewScanFrame(int64 bagId)
 	graph->addScanFrame(newScan);
 	scanFrameQueue.push_back(newScan);
 
+#define MaxGlobalScanFitnessScore 5.0
+
 	// XXX: thresholding here ?
-	if (globalScanLog.fitness_score < 1.0) {
+	if (globalScanLog.fitness_score < MaxGlobalScanFitnessScore) {
 		cout << "Use global match for #" << bagId << endl;
 		graph->addGlobalPose(newScan, globalScanLog.poseAtScan);
 	}
 
 	// use GNSS pose instead ?
-	else {
-		cout << "Use GNSS for #" << bagId << endl;
+	else if (currentVelocity.linear.norm() < 0.1) {
+		cout << "Use GNSS pose for #" << bagId << endl;
 		graph->addGlobalPose(newScan, gnssPose);
+	}
+
+	else {
+		cout << "Global match ignored for #" << bagId << endl;
+//		graph->addGlobalPose(newScan, gnssPose);
 	}
 }
 
@@ -433,10 +446,12 @@ LidarMapper::dumpStatistics()
 		auto localLog = localMapperProc->getScanLog(bid);
 		statfd 	<< bid << ' '
 				<< globalLog.gnssIsUsed << ' '
+				<< globalLog.num_of_iteration << ' '
 				<< globalLog.fitness_score << ' '
 				<< globalLog.transformation_probability << ' '
+				<< localLog.fitness_score << ' '
 				<< toSeconds(globalLog.matchingTime) << ' '
-				<< toSeconds(localLog.matchingTime) << ' '
+				<< toSeconds(localLog.matchingTime)
 				<< endl;
 	}
 

@@ -297,6 +297,21 @@ Twist::Twist(const PoseStamped &p1, const PoseStamped &p2)
 }
 
 
+Twist::Twist(const Pose &p1, const Pose &p2, const double &tseconds)
+{
+	TTransform tf = p1.inverse() * p2;
+
+	linear = tf.translation() / tseconds;
+
+	Matrix3d Rq = tf.rotation().block<3,3>(0,0);
+	Rq -= Matrix3d::Identity();
+	angular[0] = Rq(2,1);
+	angular[1] = Rq(0,2);
+	angular[2] = Rq(1,0);
+	angular /= tseconds;
+}
+
+
 // calculate twist from transformation and time difference
 Twist::Twist(const TTransform &tf, const double &tseconds)
 {

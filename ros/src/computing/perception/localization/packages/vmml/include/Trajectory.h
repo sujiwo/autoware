@@ -92,6 +92,9 @@ struct Twist
 	// calculate twist from two poses
 	Twist(const PoseStamped &p1, const PoseStamped &p2);
 
+	// calculate twist from two poses with time difference
+	Twist(const Pose &p1, const Pose &p2, const double &tseconds);
+
 	// calculate twist from transformation and time difference
 	Twist(const TTransform &tf, const double &tseconds);
 
