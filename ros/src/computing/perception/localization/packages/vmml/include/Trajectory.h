@@ -101,11 +101,37 @@ struct Twist
 	TTransform displacement(const tduration &td) const;
 	TTransform displacement(const double &seconds) const;
 
+	inline TTransform operator*(const double &seconds) const
+	{ return displacement(seconds); }
+
+	inline TTransform operator*(const tduration &td) const
+	{ return displacement(td); }
+
 	PoseStamped extrapolate(const tduration &td) const;
 	PoseStamped extrapolate(const double &seconds) const;
 
 	Eigen::Vector3d linear, angular;
 	PoseStamped anchor;
+
+	friend class boost::serialization::access;
+private:
+	template<class Archive>
+	inline void save(Archive &ar, const unsigned int v) const
+	{
+		ar << boost::serialization::make_array(linear.data(), 3);
+		ar << boost::serialization::make_array(angular.data(), 3);
+		ar & anchor;
+	}
+
+	template<class Archive>
+	inline void load(Archive &ar, const unsigned int v)
+	{
+		ar >> boost::serialization::make_array(linear.data(), 3);
+		ar >> boost::serialization::make_array(angular.data(), 3);
+		ar & anchor;
+	}
+
+	BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 

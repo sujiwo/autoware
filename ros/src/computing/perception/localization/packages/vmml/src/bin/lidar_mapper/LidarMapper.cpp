@@ -338,21 +338,17 @@ LidarMapper::addNewScanFrame(int64 bagId)
 
 	ScanFrame::Ptr newScan;
 	double diffDistance = 0.0;
-	Twist currentVelocity;
 
 	if (bagId==generalParams.startId) {
 		newScan = ScanFrame::create(bagId, t, gnssPose, gnssPose, localScanLog.accum_distance);
 	}
 
 	else {
-		const auto &prevLocalLog = localMapperProc->getScanLog(localScanLog.prevScanFrame);
-		const auto &prevFrameLog = localMapperProc->getScanLog(localScanLog.sequence_num-1);
-		currentVelocity = Twist(localScanLog.poseAtScan, prevFrameLog.poseAtScan,
-				toSeconds(localScanLog.timestamp-prevFrameLog.timestamp));
-		TTransform odomMove = prevLocalLog.poseAtScan.inverse() * localScanLog.poseAtScan;
+		const auto &prevFrameLog = localMapperProc->getScanLog(localScanLog.prevScanFrame);
+		TTransform odomMove = prevFrameLog.poseAtScan.inverse() * localScanLog.poseAtScan;
 		Pose newpose = graph->lastFrame()->odometry * odomMove;
 		newScan = ScanFrame::create(bagId, t, newpose, gnssPose, localScanLog.accum_distance);
-		diffDistance = localScanLog.accum_distance - prevLocalLog.accum_distance;
+		diffDistance = localScanLog.accum_distance - prevFrameLog.accum_distance;
 	}
 
 	elapsed_distance_for_optimization += diffDistance;
@@ -368,13 +364,14 @@ LidarMapper::addNewScanFrame(int64 bagId)
 	}
 
 	// use GNSS pose instead ?
-	else if (currentVelocity.linear.norm() < 0.1) {
+	// when the speed is less than 10 km/h
+	else if (localScanLog.currentVelocity.linear.norm() < 2.78) {
 		cout << "Use GNSS pose for #" << bagId << endl;
 		graph->addGlobalPose(newScan, gnssPose);
 	}
 
 	else {
-		cout << "Global match ignored for #" << bagId << endl;
+		cout << "Global match & GNSS ignored for #" << bagId << endl;
 //		graph->addGlobalPose(newScan, gnssPose);
 	}
 }

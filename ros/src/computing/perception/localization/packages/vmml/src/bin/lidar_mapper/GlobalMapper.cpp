@@ -43,7 +43,8 @@ void serialize(Archive &ar, LidarMapper::GlobalMapper::ScanProcessLog &log, unsi
 		& log.prevScanFrame
 		& log.accum_distance
 		& log.gnssIsUsed
-		& log.matchingTime;
+		& log.matchingTime
+		& log.currentVelocity;
 }
 
 }
@@ -207,6 +208,12 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 
 	// Logging
 	} catch (ScanProcessLog &spl) {
+		// Calculate velocity first
+		if (scanId!=parent.generalParams.startId) {
+			auto prevLog = getScanLog(scanId-1);
+			spl.currentVelocity = Twist(prevLog.poseAtScan, spl.poseAtScan, toSeconds(messageTime-prevLog.timestamp));
+		}
+
 		scanResults.insert(make_pair(scanId, spl));
 	} catch (std::exception &e) {
 		cerr << "Unknown exception: " << e.what() << endl;
