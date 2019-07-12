@@ -42,6 +42,13 @@ PoseGraph::PoseGraph(LidarMapper &p) :
 	inipp::extract(iniCfg.sections["Scan Matching"]["const_stddev_x"], const_stddev_x);
 	inipp::extract(iniCfg.sections["Scan Matching"]["const_stddev_q"], const_stddev_q);
 
+	inipp::extract(iniCfg.sections["Scan Matching"]["min_stddev_x"], min_stddev_x);
+	inipp::extract(iniCfg.sections["Scan Matching"]["max_stddev_x"], max_stddev_x);
+	inipp::extract(iniCfg.sections["Scan Matching"]["min_stddev_q"], min_stddev_q);
+	inipp::extract(iniCfg.sections["Scan Matching"]["max_stddev_q"], max_stddev_q);
+	inipp::extract(iniCfg.sections["Scan Matching"]["fitness_score_max"], fitness_score_max);
+	inipp::extract(iniCfg.sections["Scan Matching"]["var_gain"], var_gain);
+
 	inipp::extract(iniCfg.sections["GNSS"]["stddev_horizontal"], gnss_stddev_horizontal);
 	inipp::extract(iniCfg.sections["GNSS"]["stddev_vertical"], gnss_stddev_vertical);
 	inipp::extract(iniCfg.sections["GNSS"]["stddev_angular"], gnss_stddev_angular);
@@ -159,6 +166,15 @@ Eigen::MatrixXd
 PoseGraph::calculateInformationMatrix(const Loop &loop)
 {
 	Eigen::MatrixXd information = Eigen::MatrixXd::Identity(6, 6);
+	double min_var_x = std::pow(min_stddev_x, 2);
+	double max_var_x = std::pow(max_stddev_x, 2);
+	double min_var_q = std::pow(min_stddev_q, 2);
+	double max_var_q = std::pow(max_stddev_q, 2);
+
+	float w_x = weight(var_gain, fitness_score_max, min_var_x, max_var_x, loop.fitness_score);
+	float w_q = weight(var_gain, fitness_score_max, min_var_q, max_var_q, loop.fitness_score);
+	information.topLeftCorner(3, 3).array() /= w_x;
+	information.bottomRightCorner(3, 3).array() /= w_q;
 
 	return information;
 }
@@ -297,6 +313,14 @@ PoseGraph::createPointCloud ()
 	}
 
 	return newMap;
+}
+
+
+double
+PoseGraph::weight(double gain, double maxFitnessScore, double Ymin, double Ymax, double fitnessScore)
+{
+	double Y = (1.0 - std::exp(-gain*fitnessScore)) / (1.0 - std::exp(-gain*maxFitnessScore));
+	return Ymin + Y*(Ymax - Ymin);
 }
 
 

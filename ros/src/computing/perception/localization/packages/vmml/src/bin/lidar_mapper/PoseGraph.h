@@ -108,15 +108,32 @@ protected:
 
 	g2o::EdgeSE3Prior* createGnssPrior(g2o::VertexSE3* v_se3, const ptime &t);
 
+	// Fixed information matrix
 	Eigen::MatrixXd calculateInformationMatrix();
 
+	// Information matrix for loops
 	Eigen::MatrixXd calculateInformationMatrix
 	(const Loop &loop);
+
+	// Information matrix for GNSS
+	Eigen::MatrixXd calculateInformationMatrix
+	(const Pose &p) const;
+
+	static double weight(double gain, double maxFitnessScore, double Ymin, double Ymax, double fitnessScore);
 
 	// Information matrix generator
 	double
 		const_stddev_x,
 		const_stddev_q;
+
+	double
+		min_stddev_x,
+		max_stddev_x,
+		min_stddev_q,
+		max_stddev_q,
+		fitness_score_max,
+		var_gain;
+
 	double
 		gnss_stddev_horizontal,
 		gnss_stddev_vertical,

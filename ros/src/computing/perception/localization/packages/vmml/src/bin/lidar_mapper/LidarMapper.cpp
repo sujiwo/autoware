@@ -21,6 +21,20 @@ using namespace boost::filesystem;
 namespace LidarMapper {
 
 
+typedef Eigen::DiagonalMatrix<double, 6> Covariance;
+
+
+class TrajectoryWithCovariance : public Trajectory
+{
+private:
+	typedef Trajectory Parent;
+
+protected:
+
+};
+
+
+
 LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::path &myWorkDir)
 {
 	workDir = myWorkDir;

@@ -143,7 +143,7 @@ public:
 
 	void push_back(const PoseStamped &);
 
-	// Return nearest element of provided time
+	// Return nearest element at provided time
 	PoseStamped at(const ptime&) const;
 
 	PoseStamped at(const int idx) const
@@ -175,13 +175,15 @@ public:
 	bool isInside(const ptime &t) const;
 
 private:
-
 	typedef std::vector<PoseStamped> Parent;
 
+protected:
 	template<class Archive>
 	inline void serialize(Archive &ar, const unsigned int version)
 	{ ar & boost::serialization::base_object<Parent>(*this);}
 
 };
+
+
 
 #endif /* _TRAJECTORY_H_ */
