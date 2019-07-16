@@ -187,7 +187,6 @@ target_link_libraries(
 		${catkin_LIBRARIES}
 )
 
-
 add_executable(test_priv
 	src/bin/temporaries/test_priv.cpp
 )
@@ -198,7 +197,6 @@ target_link_libraries(
 		${REQUIRED_LIBS}
 		${catkin_LIBRARIES}
 )
-
 
 add_executable(
 	lidar_mapper
@@ -217,3 +215,11 @@ target_link_libraries(
 		${REQUIRED_LIBS}
 		${catkin_LIBRARIES}
 )
+
+install(
+	TARGETS 
+		test_priv
+		test_tf
+		lidar_mapper
+		vmml_cli 
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION} )
