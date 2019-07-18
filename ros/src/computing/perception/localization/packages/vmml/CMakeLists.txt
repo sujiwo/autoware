@@ -214,6 +214,7 @@ add_executable(
 		src/bin/lidar_mapper/LoopDetector.cpp
 		src/bin/lidar_mapper/PoseGraph.cpp
 		src/bin/lidar_mapper/ScanFrame.cpp
+		src/bin/lidar_mapper/VMapBuilder.cpp
 )
 
 target_link_libraries(
