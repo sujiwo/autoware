@@ -11,16 +11,18 @@
 #include <utility>
 #include <Eigen/Eigen>
 
-#include "ImageDatabase.h"
+#include <ros/package.h>
+
+#include "VMap.h"
 
 using namespace std;
 using namespace Eigen;
 
 
+
 int main(int argc, char *argv[])
 {
-	ORBVocabulary myVocab;
-	myVocab.loadFromTextFile("/tmp/ORBvoc.txt");
+	VMap mymap;
 
 	return 0;
 }

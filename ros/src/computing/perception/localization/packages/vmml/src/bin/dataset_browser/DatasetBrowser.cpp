@@ -11,6 +11,7 @@
 #include <chrono>
 #include <thread>
 #include <functional>
+#include <ros/package.h>
 #include <boost/filesystem.hpp>
 
 #include <opencv2/core.hpp>
@@ -117,7 +118,6 @@ std::string dPoseLean (const Pose &frame)
 
 
 // XXX: Change this
-const string lidarCalibrationParams("/home/sujiwo/Autoware/ros/src/computing/perception/localization/packages/vmml/params/meidai-64e-S2.yaml");
 
 void
 DatasetBrowser::changeDataset(GenericDataset::Ptr ds, datasetType ty)
@@ -125,6 +125,8 @@ DatasetBrowser::changeDataset(GenericDataset::Ptr ds, datasetType ty)
 	openDs = ds;
 	timelineSlider->setRange(0, ds->size()-1);
 	dataItem0 = ds->get(0);
+
+	const string lidarCalibrationParams(ros::package::getPath("vmml") + "/meidai-64e-S2.yaml");
 
 	if (ty==DatasetBrowser::MeidaiType) {
 		meidaiDs = static_pointer_cast<MeidaiBagDataset>(ds);

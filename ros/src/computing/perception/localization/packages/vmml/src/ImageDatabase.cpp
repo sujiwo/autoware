@@ -5,6 +5,7 @@
  *      Author: sujiwo
  */
 
+#include <ros/package.h>
 #include <map>
 #include "ImageDatabase.h"
 #include "MapPoint.h"
@@ -20,8 +21,8 @@ using namespace Eigen;
 ImageDatabase::ImageDatabase(VMap *_m) :
 	cMap(_m)
 {
-	// TODO Auto-generated constructor stub
-
+	const string defaultVocabPath = ros::package::getPath("vmml") + "/ORBvoc.txt";
+	myVoc.loadFromTextFile(defaultVocabPath);
 }
 
 

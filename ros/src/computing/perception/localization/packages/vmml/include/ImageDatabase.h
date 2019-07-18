@@ -12,6 +12,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <unistd.h>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/split_member.hpp>
 #include "DBoW2/BowVector.h"
@@ -89,6 +90,16 @@ protected:
 	}
 
 	BOOST_SERIALIZATION_SPLIT_MEMBER();
+
+public:
+
+	bool loadFromTextFile(const string &filename)
+	{
+		assert (access(filename.c_str(), R_OK)==0);
+		m_nodes.clear();
+		m_words.clear();
+		return DBoW2::TemplatedVocabulary<DBoW2::FORB::TDescriptor, DBoW2::FORB>::loadFromTextFile(filename);
+	}
 };
 
 

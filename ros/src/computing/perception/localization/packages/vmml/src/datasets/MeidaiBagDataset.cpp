@@ -96,7 +96,7 @@ MeidaiBagDataset::MeidaiBagDataset(
 	mPreprocessor.setMode(ImagePreprocessor::ProcessMode::AGC);
 	mPreprocessor.setMask(exposureMask);
 
-	velodyneCalibrationFilePath = (myPath / "params/meidai-64e-S2.yaml").string();
+	velodyneCalibrationFilePath = (myPath / "meidai-64e-S2.yaml").string();
 
 	prepareBag();
 

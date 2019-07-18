@@ -95,6 +95,12 @@ set(REQUIRED_LIBS
 	${G2O_LIBRARIES}
 )
 
+add_custom_target (orb_vocabulary 
+	ALL 
+		bunzip2 -c ${CMAKE_CURRENT_SOURCE_DIR}/params/ORBvoc.txt.bz2 > ORBvoc.txt
+	DEPENDS params/ORBvoc.txt.bz2
+	COMMENT "Extracting vocabulary... "
+)
 
 add_library(
 	vmml STATIC
@@ -198,6 +204,7 @@ target_link_libraries(
 		${catkin_LIBRARIES}
 )
 
+
 add_executable(
 	lidar_mapper
 		src/bin/lidar_mapper/main.cpp
@@ -223,3 +230,22 @@ install(
 		lidar_mapper
 		vmml_cli 
 	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION} )
+
+install(
+	FILES ${CMAKE_CURRENT_BINARY_DIR}/ORBvoc.txt
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(
+	FILES 
+		${CMAKE_CURRENT_SOURCE_DIR}/params/meidai-64e-S2.yaml
+		${CMAKE_CURRENT_SOURCE_DIR}/params/lidar_mapper.ini
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(
+	DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/conf
+	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+#install(
