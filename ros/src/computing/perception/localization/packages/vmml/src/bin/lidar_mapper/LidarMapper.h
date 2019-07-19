@@ -293,6 +293,9 @@ public:
 
 	void dumpStatistics();
 
+	inline const boost::filesystem::path& getWorkDir () const
+	{ return workDir; }
+
 protected:
 
 	// Root configuration

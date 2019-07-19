@@ -7,10 +7,13 @@
 
 #include <sensor_msgs/Image.h>
 #include <cv_bridge/cv_bridge.h>
+#include <boost/filesystem.hpp>
 
 #include "VMapBuilder.h"
 #include "LidarMapper.h"
 #include "inipp.h"
+
+using namespace boost::filesystem;
 
 namespace LidarMapper {
 
@@ -30,6 +33,14 @@ VMapBuilder::VMapBuilder(rosbag::Bag &bagfd, const std::string &imageTopic, Lida
 	auto img0 = imageBag->at<sensor_msgs::Image>(0);
 	monoCam.width = img0->width;
 	monoCam.height = img0->height;
+
+	visMap->addCameraParameter(monoCam);
+
+	path maskPath = lm.getWorkDir() / "mask.png";
+	if (exists(maskPath)) {
+		cv::Mat maskImg = cv::imread(maskPath.string(), cv::IMREAD_GRAYSCALE);
+		visMap->setMask(maskImg);
+	}
 }
 
 
