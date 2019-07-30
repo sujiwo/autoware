@@ -9,10 +9,20 @@
 
 namespace LidarMapper {
 
-void
-TrajectoryWithCovariance::push_back(const PoseStamped &p)
+
+TrajectoryWithCovariance::TrajectoryWithCovariance (const Trajectory &src)
 {
-	Parent::push_back(p);
+	for (int i=0; i<src.size(); ++i) {
+		auto &px = src.at(i);
+		push_back(px);
+	}
+}
+
+
+void
+TrajectoryWithCovariance::push_back(const PoseStamped &px)
+{
+	Parent::push_back(px);
 
 	CovarMat cov;
 	if (size()==1) {
@@ -22,12 +32,20 @@ TrajectoryWithCovariance::push_back(const PoseStamped &p)
 
 	else if (size()==2) {
 		cov = CovarMat::Identity();
-		currentVelocity = Twist(p, Parent::at(0));
+		currentVelocity = Twist(px, Parent::at(0));
 		covariances.push_back(cov);
 	}
 
 	else {
-		currentVelocity = Twist(p, Parent::at(size()-2));
+		// estimate desired pose
+		const PoseStamped &lastGood = this->at(size()-2);
+		auto disp = currentVelocity.displacement(px.timestamp - lastGood.timestamp);
+		PoseStamped estimated = lastGood * disp;
+
+		// calculate covariance
+
+		// calculate velocity
+		// xxx: unfinished
 	}
 }
 

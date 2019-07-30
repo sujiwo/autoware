@@ -17,6 +17,8 @@ class TrajectoryWithCovariance : public Trajectory
 {
 
 public:
+	TrajectoryWithCovariance (const Trajectory &);
+
 	typedef Trajectory Parent;
 	typedef Eigen::Matrix<double,6,6> CovarMat;
 
