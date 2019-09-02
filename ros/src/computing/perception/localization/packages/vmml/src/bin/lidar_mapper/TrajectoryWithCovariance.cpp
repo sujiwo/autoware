@@ -13,7 +13,7 @@ namespace LidarMapper {
 TrajectoryWithCovariance::TrajectoryWithCovariance (const Trajectory &src)
 {
 	for (int i=0; i<src.size(); ++i) {
-		auto &px = src.at(i);
+		auto px = src.at(i);
 		push_back(px);
 	}
 }
@@ -38,9 +38,9 @@ TrajectoryWithCovariance::push_back(const PoseStamped &px)
 
 	else {
 		// estimate desired pose
-		const PoseStamped &lastGood = this->at(size()-2);
+		PoseStamped lastGood = this->at(size()-2);
 		auto disp = currentVelocity.displacement(px.timestamp - lastGood.timestamp);
-		PoseStamped estimated = lastGood * disp;
+		const PoseStamped estimated = lastGood * disp;
 
 		// calculate covariance
 

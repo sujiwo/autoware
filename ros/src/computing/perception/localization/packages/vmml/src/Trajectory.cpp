@@ -45,9 +45,10 @@ PoseDumpStream(int sprecision=dPrecision)
 
 PoseStamped
 PoseStamped::operator* (const Pose &transform)
+const
 {
 //	Pose me = Pose::from_Pos_Quat(this->position(), this->orientation());
-	Pose P = static_cast<Pose&>(*this) * transform;
+	Pose P = static_cast<const Pose&>(*this) * transform;
 	return PoseStamped(P, this->timestamp);
 }
 

@@ -42,7 +42,7 @@ struct PoseStamped : public Pose
 		timestamp = t;
 	}
 
-	PoseStamped operator* (const Pose &t);
+	PoseStamped operator* (const Pose &t) const;
 
 	inline double timeSecond () const
 	{ return toSeconds(timestamp); }
