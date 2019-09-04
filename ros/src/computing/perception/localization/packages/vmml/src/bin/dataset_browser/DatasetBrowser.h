@@ -75,6 +75,8 @@ private:
 
 	QPushButton *playButton;
 
+	datasetType currentDatasetType;
+
 private:
 	void setImageOnPosition (int v);
 	void startPlayBag();

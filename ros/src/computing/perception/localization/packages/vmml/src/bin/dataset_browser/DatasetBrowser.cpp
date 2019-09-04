@@ -125,6 +125,7 @@ DatasetBrowser::changeDataset(GenericDataset::Ptr ds, datasetType ty)
 	openDs = ds;
 	timelineSlider->setRange(0, ds->size()-1);
 	dataItem0 = ds->get(0);
+	currentDatasetType = ty;
 
 	const string lidarCalibrationParams(ros::package::getPath("vmml") + "/meidai-64e-S2.yaml");
 
@@ -368,6 +369,15 @@ DatasetBrowser::getCurrentFrameInfo(uint32_t frNum) const
 
 	auto curFrame = openDs->get(frNum);
 	ss << "#: " << curFrame->getId() << endl;
+
+	if (currentDatasetType==MeidaiType) {
+		// Get nearest Lidar frame number
+		auto imageTime = ros::Time::fromBoost(curFrame->getTimestamp());
+		if (meidaiPointClouds!=nullptr and isTimeInside(meidaiPointClouds, imageTime)) {
+			uint32_t pcIdx = meidaiPointClouds->getPositionAtTime(imageTime);
+			ss << "PC#: " << pcIdx << endl;
+		}
+	}
 
 	try {
 	auto pos = curFrame->getPose();

@@ -189,6 +189,7 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 		}
 		else {
 			currentPose = guessPose;
+//			cerr << "Pose estimation error too high: " << scanId << endl;
 		}
 
 		// velocity and acceleration not needed
@@ -215,6 +216,17 @@ void GlobalMapper::feed(GlobalMapperCloud::ConstPtr &newScan, const ptime &messa
 		}
 
 		scanResults.insert(make_pair(scanId, spl));
+
+		// Dumping result
+		cout << "Sequence: " << scanId << endl;
+		cout << "# filtered scan points: " << newScan->size() << endl;
+		cout << "Converged: " << spl.hasConverged << endl;
+		cout << "Fitness score: " << spl.fitness_score << endl;
+		cout << "Transformation probability: " << spl.transformation_probability << endl;
+		cout << "Execution time: " << toSeconds(spl.matchingTime) << endl;
+		cout << "# of iterations: " << spl.num_of_iteration << endl;
+		cout << "Is valid: " << spl.isValid << endl;
+
 	} catch (std::exception &e) {
 		cerr << "Unknown exception: " << e.what() << endl;
 	}

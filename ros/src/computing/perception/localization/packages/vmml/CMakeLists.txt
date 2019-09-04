@@ -227,11 +227,11 @@ target_link_libraries(
 
 install(
 	TARGETS 
-		test_priv
-		test_tf
 		lidar_mapper
 		vmml_cli 
-	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION} )
+		dataset_browser
+	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 install(
 	FILES ${CMAKE_CURRENT_BINARY_DIR}/ORBvoc.txt
