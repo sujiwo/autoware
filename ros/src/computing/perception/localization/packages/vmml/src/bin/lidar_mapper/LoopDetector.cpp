@@ -50,6 +50,8 @@ LoopDetector::findCandidates(const std::vector<ScanFrame::Ptr> &frameList, const
 			continue;
 		}
 
+		// XXX: place detection using image database and verification
+
 		// Take GNSS position
 		Vector3d
 			kfPos = kf->gnssPose.position(),

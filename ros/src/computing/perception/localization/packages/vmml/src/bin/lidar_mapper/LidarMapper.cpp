@@ -184,8 +184,11 @@ LidarMapper::scanResultCallback(int64 bagId)
 {
 	const auto &localScanLog = localMapperProc->getScanLog(bagId);
 	const auto &globalScanLog = globalMapperProc->getScanLog(bagId);
+
 	if (localScanLog.hasScanFrame==true) {
 		addNewScanFrame(bagId);
+
+		// XXX: Insert new image KeyFrame here
 	}
 
 	// Check if we need to kick off Pose Graph Optimization
