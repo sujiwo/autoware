@@ -9,6 +9,7 @@
 #include <sstream>
 #include <thread>
 #include <algorithm>
+#include <csignal>
 
 #include "LidarMapper.h"
 
@@ -133,7 +134,10 @@ LidarMapper::buildScanOnly()
 		logging.open(resultLogFilename.string(), std::fstream::in);
 		localMapperProc->readLog(logging);
 		globalMapperProc->readLog(logging);
+
 		cout << "Results from previous run loaded" << endl;
+		cout << "# of scan frames: " << globalMapperProc->scanResults.size() << endl;
+
 		optimizeOnly();
 
 		auto pcdMap = graph->createPointCloud();
@@ -209,6 +213,16 @@ convertForGlobalMapper(pcl::PointCloud<pcl::PointXYZI>::ConstPtr source)
 void
 LidarMapper::doScan(std::function<void(int64)> callback)
 {
+	bool interrupted = false;
+
+	// XXX: Put interrupt (SIG-INT) signal handler prior to start sequence
+/*
+	signal(SIGINT, [&interrupted](int signum)
+	{
+
+	});
+*/
+
 	for (int64 bagId=generalParams.startId, c=0; bagId<=generalParams.stopId; bagId++, ++c) {
 
 		ptime messageTime;

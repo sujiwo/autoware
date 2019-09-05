@@ -115,6 +115,8 @@ public:
 
 	void addKeyFrame (const kfid &kfId);
 
+	void loadVocabulary(const string &filename);
+
 	void rebuildAll ();
 
 	// Used for loop detection
@@ -157,7 +159,7 @@ protected:
 //		ar & seqSlamProvider;
 	}
 
-private:
+protected:
 	ORBVocabulary myVoc;
 	std::map<DBoW2::WordId, std::set<kfid> > invertedKeywordDb;
 
