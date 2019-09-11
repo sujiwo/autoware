@@ -43,12 +43,14 @@
 
 #include "RandomAccessBag.h"
 
-#include "access_private.hpp"
+//#include "access_private.hpp"
 
 using namespace std;
 
+/*
 ACCESS_PRIVATE_FIELD(rosbag::MessageInstance, rosbag::IndexEntry const,
                      index_entry_);
+*/
 
 /*
  * A Notes about ROS Bags:
@@ -113,12 +115,13 @@ void RandomAccessBag::createCache() {
   iterator it = begin();
   size_t sz = this->size();
   conn = getConnections()[0];
-  msgPtr.resize(sz);
+  msgPtr.reserve(sz);
 
   for (uint32_t p = 0; p < sz; p++) {
-    rosbag::MessageInstance &m = *it;
-    rosbag::IndexEntry const ie = access_private::index_entry_(m);
-    msgPtr.at(p) = ie;
+    rosbag::MessageInstance m = *it;
+    // XXX: Fix this !
+//    rosbag::IndexEntry const ie = access_private::index_entry_(m);
+    msgPtr.push_back(m);
     ++it;
   }
 }
@@ -161,8 +164,8 @@ void RandomAccessBag::resetTimeConstraint() {
 
 uint32_t RandomAccessBag::getPositionAtDurationSecond(const double S) const {
   ros::Duration Sd(S);
-  ros::Time Tx = msgPtr.at(0).time + Sd;
-  if (Tx < msgPtr.at(0).time or Tx > msgPtr.back().time)
+  ros::Time Tx = msgPtr.at(0).getTime() + Sd;
+  if (Tx < msgPtr.at(0).getTime() or Tx > msgPtr.back().getTime())
     throw out_of_range("Requested time is out of bag");
 
   return getPositionAtTime(Tx);
@@ -170,7 +173,7 @@ uint32_t RandomAccessBag::getPositionAtDurationSecond(const double S) const {
 
 uint32_t RandomAccessBag::getPositionAtTime(const ros::Time &tx) const {
   ros::Time txi;
-  const ros::Time bstart = msgPtr.front().time, bstop = msgPtr.back().time;
+  const ros::Time bstart = msgPtr.front().getTime(), bstop = msgPtr.back().getTime();
 
   // Check whether tx is inside the range, with tolerance of 1 microsecond
   if (tx < bstart) {
@@ -192,14 +195,14 @@ uint32_t RandomAccessBag::getPositionAtTime(const ros::Time &tx) const {
 
   auto it =
       std::lower_bound(msgPtr.begin(), msgPtr.end(), txi,
-                       [](const rosbag::IndexEntry &iptr, const ros::Time &t) {
-                         return (iptr.time < t);
+                       [](const rosbag::MessageInstance &iptr, const ros::Time &t) {
+                         return (iptr.getTime() < t);
                        });
 
   // check if either solution p or p-1 is closer to our requested time
   uint32_t p = it - msgPtr.begin();
   if (p > 0 and p < size() - 1) {
-    auto td1 = msgPtr.at(p).time - tx, td0 = txi - msgPtr.at(p - 1).time;
+    auto td1 = msgPtr.at(p).getTime() - tx, td0 = txi - msgPtr.at(p - 1).getTime();
     return (td1 > td0 ? p - 1 : p);
   } else
     return p;
@@ -212,7 +215,7 @@ ros::Time RandomAccessBag::timeFromOffset(const double secondsFromStart) const {
   assert(secondsFromStart >= 0 and secondsFromStart <= length().toSec());
 
   ros::Duration td(secondsFromStart);
-  return msgPtr.at(0).time + td;
+  return msgPtr.at(0).getTime() + td;
 }
 
 /*
@@ -226,20 +229,28 @@ ros::Time RandomAccessBag::timeFromStart(const double seconds) const {
 }
 
 typedef std::map<uint32_t, rosbag::ConnectionInfo *> connectionListT;
-ACCESS_PRIVATE_FIELD(rosbag::Bag, connectionListT, connections_);
+//ACCESS_PRIVATE_FIELD(rosbag::Bag, connectionListT, connections_);
 
 std::map<std::string, std::string>
 RandomAccessBag::getTopicList(const rosbag::Bag &bag) {
   std::map<std::string, std::string> topicList;
 
+/*
   const connectionListT &bagConnList = access_private::connections_(bag);
 
   for (auto &conp : bagConnList) {
     auto conn = conp.second;
     topicList.insert(make_pair(conn->topic, conn->datatype));
   }
+*/
+  rosbag::View nview(bag);
+  vector<const rosbag::ConnectionInfo*> conList = nview.getConnections();
+  for (auto &conn: conList) {
+	  topicList.insert(make_pair(conn->topic, conn->datatype));
+  }
 
   return topicList;
+
 }
 
 std::string RandomAccessBag::messageType() const { return conn->datatype; }

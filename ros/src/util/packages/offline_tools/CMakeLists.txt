@@ -94,6 +94,22 @@ target_include_directories(bag_viewer
 	PUBLIC bag_viewer
 )
 
+install(
+	FILES include/RandomAccessBag.h 
+	DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+)
+
+install(
+	TARGETS random_access_bag
+	LIBRARY
+		DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(
+	TARGETS bag_viewer
+	RUNTIME
+		DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 #if (CATKIN_ENABLE_TESTING)
 #	find_package(rostest REQUIRED)

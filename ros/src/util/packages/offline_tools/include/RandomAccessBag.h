@@ -82,14 +82,18 @@ public:
   void setTimeConstraint(const double seconds1FromOffset,
                          const double seconds2FromOffset);
 
-  template <typename T> boost::shared_ptr<T> at(int position) {
-    assert(position >= 0 and position < size());
-    return instantiate<T>(msgPtr.at(position));
+  /*
+   * Getter
+   */
+  template <typename T> boost::shared_ptr<T> at(unsigned int position) {
+    assert(position < size());
+//    return instantiate<T>(msgPtr.at(position));
+    return msgPtr.at(position).instantiate<T>();
   }
 
   //	RandomAccessBag subset(const ros::Time &start, ros::Duration &d) const;
 
-  ros::Time timeAt(const int i) const { return msgPtr.at(i).time; }
+  ros::Time timeAt(const int i) const { return msgPtr.at(i).getTime(); }
 
   template <typename T> boost::shared_ptr<T> atDurationSecond(const double S) {
     return at<T>(getPositionAtDurationSecond(S));
@@ -108,12 +112,12 @@ public:
    */
   ros::Duration length() const { return stopTime() - startTime(); }
 
-  ros::Time startTime() const { return msgPtr.front().time; }
+  ros::Time startTime() const { return msgPtr.front().getTime(); }
 
-  ros::Time stopTime() const { return msgPtr.back().time; }
+  ros::Time stopTime() const { return msgPtr.back().getTime(); }
 
   inline bool isTimeInside(const ros::Time &t) const {
-    return (t >= msgPtr.front().time and t <= msgPtr.back().time);
+    return (t >= msgPtr.front().getTime() and t <= msgPtr.back().getTime());
   }
 
   /*
@@ -144,15 +148,20 @@ protected:
 
   const rosbag::Bag &bagstore;
   const rosbag::ConnectionInfo *conn;
-  std::vector<rosbag::IndexEntry> msgPtr;
+
+  //  std::vector<rosbag::IndexEntry> msgPtr;
+  std::vector<rosbag::MessageInstance> msgPtr;
+
   bool mIsTimeConstrained = false;
 
+/*
   template <class T>
   boost::shared_ptr<T> instantiate(const rosbag::IndexEntry &index_entry) {
     rosbag::MessageInstance *m =
         newMessageInstance(conn, index_entry, bagstore);
     return m->instantiate<T>();
   }
+*/
 
   ros::Time bagStartTime, bagStopTime;
   const std::string viewTopic;
