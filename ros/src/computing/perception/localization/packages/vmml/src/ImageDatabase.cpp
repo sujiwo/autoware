@@ -18,6 +18,13 @@ using namespace std;
 using namespace Eigen;
 
 
+void
+ORBVocabulary::grow(const std::vector<std::vector<DBoW2::FORB::TDescriptor> > &new_training_features)
+{
+
+}
+
+
 ImageDatabase::ImageDatabase(VMap *_m) :
 	cMap(_m)
 {

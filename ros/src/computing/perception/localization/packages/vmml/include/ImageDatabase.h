@@ -100,6 +100,8 @@ public:
 		m_words.clear();
 		return DBoW2::TemplatedVocabulary<DBoW2::FORB::TDescriptor, DBoW2::FORB>::loadFromTextFile(filename);
 	}
+
+	void grow(const std::vector<std::vector<DBoW2::FORB::TDescriptor> > &new_training_features);
 };
 
 
