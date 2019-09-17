@@ -742,6 +742,7 @@ private:
 
 		MapBuilder2 mapBuilder;
 		// Force the map to load generic vocabulary
+		// We may need to move these two lines into MapBuilder itself
 		string vocabPath = (myPath / "ORBvoc.txt").string();
 		mapBuilder.getMap()->getImageDB()->loadVocabulary(vocabPath);
 

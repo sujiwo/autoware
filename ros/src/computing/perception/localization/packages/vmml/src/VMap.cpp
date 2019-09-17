@@ -124,6 +124,8 @@ kfid VMap::createKeyFrame(const cv::Mat &imgSrc,
 	keyframeInvIdx.insert(pair<kfid,KeyFrame*> (nId, nKf));
 	keyframeInvIdx_mtx->unlock();
 
+	imageDB->addKeyFrame(nId);
+
 	framePoints[nId] = map<mpid,kpid>();
 	framePointsInv[nId] = map<kpid,mpid>();
 

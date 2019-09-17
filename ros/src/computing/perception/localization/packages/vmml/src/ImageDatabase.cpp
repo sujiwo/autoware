@@ -57,6 +57,9 @@ ImageDatabase::loadVocabulary(const string &filename)
 }
 
 
+/*
+ * XXX: Re-evaluate this process !
+ */
 void
 ImageDatabase::rebuildAll()
 {
@@ -122,6 +125,25 @@ void
 ImageDatabase::newKeyFrameCallback (const kfid &k)
 {
 	seqSlamProvider.learn(cMap->keyframe(k)->getImage(), k);
+}
+
+
+void
+ImageDatabase::addKeyFrame (const kfid &keyId)
+{
+	KeyFrame *kf = cMap->keyframe(keyId);
+	vector<cv::Mat> kfDescs = toDescriptorVector(kf->allDescriptors());
+
+	// Build BoW descriptor of this keyframe
+	BoWList[keyId] = DBoW2::BowVector();
+	FeatVecList[keyId] = DBoW2::FeatureVector();
+	myVoc.transform(kfDescs, BoWList[keyId], FeatVecList[keyId], 4);
+
+	// Build Inverse Index
+	for (auto &bowvec: BoWList[keyId]) {
+		const DBoW2::WordId wrd = bowvec.first;
+		invertedKeywordDb[wrd].insert(keyId);
+	}
 }
 
 
