@@ -51,6 +51,13 @@ std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors)
 
 
 void
+ImageDatabase::loadVocabulary(const string &filename)
+{
+	myVoc.loadFromTextFile(filename);
+}
+
+
+void
 ImageDatabase::rebuildAll()
 {
 	// 1: Build Map Points' Descriptors

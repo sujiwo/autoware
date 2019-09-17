@@ -165,10 +165,10 @@ public:
 
 	VmmlCliApp (int argc, char *argv[]):
 		mLineEditor(argv[0], TestPrompt),
-		mapPath("")
-
+		mapPath(""),
+		myPath(ros::package::getPath("vmml"))
 	{
-	//	localizer = new Localizer()
+		cout << "My Path: " << myPath.string() << endl;
 	}
 
 
@@ -313,6 +313,8 @@ protected:
 
 	VMap *mapSrc = NULL;
 	boost::filesystem::path mapPath;
+	// Path to VMML package
+	fs::path myPath;
 
 	ImageDatabase *imgDb = NULL;
 	SequenceSLAM *seqSlProv = NULL;
@@ -739,6 +741,10 @@ private:
 			useIntPosition = false;
 
 		MapBuilder2 mapBuilder;
+		// Force the map to load generic vocabulary
+		string vocabPath = (myPath / "ORBvoc.txt").string();
+		mapBuilder.getMap()->getImageDB()->loadVocabulary(vocabPath);
+
 		mapBuilder.setMask(loadedDataset->getMask());
 
 		if (slDatasourceType == OXFORD_DATASET_TYPE) {

@@ -30,6 +30,8 @@ class ORBVocabulary : public DBoW2::TemplatedVocabulary<DBoW2::FORB::TDescriptor
 protected:
 	friend class boost::serialization::access;
 
+	bool vocabularyLoaded = false;
+
 	template<class Archive>
 	void save(Archive &ar, const unsigned int v) const
 	{
