@@ -19,6 +19,7 @@
 #include "DBoW2/FORB.h"
 #include "DBoW2/TemplatedVocabulary.h"
 #include "VMap.h"
+#include "BaseFrame.h"
 #include "cvobj_serialization.h"
 #include "SequenceSLAM.h"
 
@@ -124,9 +125,11 @@ public:
 	void rebuildAll ();
 
 	// Used for loop detection
-	kfid find (const KeyFrame *kf) const;
+/*
+	std::vector<kfid> findCandidates (const BaseFrame &kf) const;
 
 	kfid find (Frame &f, bool simple=false) const;
+*/
 
 	/*
 	 * Find matched keyframe candidates from database using BoW method.

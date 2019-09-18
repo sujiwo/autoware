@@ -148,12 +148,16 @@ ImageDatabase::addKeyFrame (const kfid &keyId)
 
 
 /*
- * Reserved for loop closing
- */
-kfid
-ImageDatabase::find (const KeyFrame *kf) const
+vector<kfid>
+ImageDatabase::findCandidates (const BaseFrame &kf) const
 {
-	return 0;
+	// BoW descriptor for this frame
+	auto frameBoW = DBoW2::BowVector();
+	auto frameFeats = DBoW2::FeatureVector();
+
+	// XXX: Incomplete
+
+	return std::vector<kfid>();
 }
 
 
@@ -162,6 +166,7 @@ ImageDatabase::find (Frame &f, bool simple) const
 {
 
 }
+*/
 
 
 vector<kfid>
