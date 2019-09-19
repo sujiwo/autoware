@@ -88,6 +88,8 @@ LidarMapper::LidarMapper(const std::string &bagpath, const boost::filesystem::pa
 	// Other important objects
 	graph = PoseGraph::Ptr(new PoseGraph(*this));
 	loopDetector = LoopDetector::Ptr(new LoopDetector(*this));
+	string imageTopic = "/camera1/image_raw";
+	visualMapperProc = shared_ptr<VMapBuilder>(new VMapBuilder(bagFd, imageTopic, *this));
 
 	// Making sure GNSS trajectory always available
 	buildGnssTrajectory();

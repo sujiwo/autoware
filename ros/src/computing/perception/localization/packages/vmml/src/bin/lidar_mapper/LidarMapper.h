@@ -36,6 +36,8 @@
 #include "datasets/LidarScanBag2.h"
 
 #include "ScanFrame.h"
+#include "VMapBuilder.h"
+
 
 namespace LidarMapper {
 
@@ -307,6 +309,7 @@ protected:
 
 	std::shared_ptr<LocalMapper> localMapperProc;
 	std::shared_ptr<GlobalMapper> globalMapperProc;
+	std::shared_ptr<VMapBuilder> visualMapperProc;
 
 	TTransform worldToMap;
 
