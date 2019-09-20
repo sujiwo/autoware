@@ -27,6 +27,7 @@ public:
 	virtual ~VMapBuilder();
 
 	bool feed(const ScanFrame &lframe);
+	bool feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr scan, const ptime &tstamp);
 
 protected:
 	std::unique_ptr<VMap> visMap;
@@ -35,6 +36,10 @@ protected:
 
 	CameraPinholeParams monoCam;
 	cv::Mat getImage(const ScanFrame &lframe);
+	cv::Mat getImage(const ptime &timestamp);
+
+	kfid pivot;
+	bool hasStarted = false;
 };
 
 } /* namespace LidarMapper */

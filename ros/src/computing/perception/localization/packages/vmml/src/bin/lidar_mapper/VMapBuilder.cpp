@@ -58,14 +58,41 @@ VMapBuilder::feed(const ScanFrame &lframe)
 }
 
 
+/*
+ * We suppose that this function can be called only from LocalMapper
+ */
+bool
+VMapBuilder::feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr scan, const ptime &tstamp)
+{
+	auto image = getImage(tstamp);
+	if (hasStarted==false) {
+
+	}
+
+	else {
+
+	}
+
+	return true;
+}
+
+
 cv::Mat
 VMapBuilder::getImage(const ScanFrame &lframe)
 {
+	return getImage(lframe.timestamp);
+}
+
+
+cv::Mat
+VMapBuilder::getImage(const ptime &timestamp)
+{
 	// Find corresponding image frame
-	auto idx = imageBag->getPositionAtTime(ros::Time::fromBoost(lframe.timestamp));
+	auto idx = imageBag->getPositionAtTime(ros::Time::fromBoost(timestamp));
 	auto _imgs = imageBag->at<sensor_msgs::Image>(idx);
 	auto gp = cv_bridge::toCvCopy(*_imgs, sensor_msgs::image_encodings::BGR8);
 	return gp->image;
+
 }
 
 } /* namespace LidarMapper */
