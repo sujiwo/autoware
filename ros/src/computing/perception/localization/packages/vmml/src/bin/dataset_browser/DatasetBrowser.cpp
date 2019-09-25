@@ -326,7 +326,7 @@ DatasetBrowser::projectScan
 (pcl::PointCloud<pcl::PointXYZ>::ConstPtr lidarScan)
 const
 {
-	return BaseFrame::projectLidarScan(lidarScan, defaultLidarToCameraTransform, datasetCameraParam);
+	return BaseFrame::projectLidarScan(*lidarScan, defaultLidarToCameraTransform, datasetCameraParam);
 }
 
 

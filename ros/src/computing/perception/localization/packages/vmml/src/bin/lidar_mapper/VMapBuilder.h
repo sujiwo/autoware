@@ -13,7 +13,9 @@
 #include <rosbag/bag.h>
 #include <RandomAccessBag.h>
 #include "VMap.h"
+#include "LidarMapper.h"
 #include "ScanFrame.h"
+#include "ImageLidarFrame.h"
 
 
 namespace LidarMapper {
@@ -35,11 +37,14 @@ protected:
 	LidarMapper *parent;
 
 	CameraPinholeParams monoCam;
+	TTransform lidarToCamera;
+	float imageRescale;
+
 	cv::Mat getImage(const ScanFrame &lframe);
 	cv::Mat getImage(const ptime &timestamp);
 
-	kfid pivot;
-	bool hasStarted = false;
+	kfid pivot=std::numeric_limits<kfid>::max();
+	bool initialized = false;
 };
 
 } /* namespace LidarMapper */

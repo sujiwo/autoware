@@ -10,9 +10,10 @@
 #include <boost/filesystem.hpp>
 
 #include "VMapBuilder.h"
-#include "LidarMapper.h"
 #include "inipp.h"
 
+
+using namespace std;
 using namespace boost::filesystem;
 
 namespace LidarMapper {
@@ -30,9 +31,21 @@ VMapBuilder::VMapBuilder(rosbag::Bag &bagfd, const std::string &imageTopic, Lida
 	inipp::extract(conf.sections["Camera"]["fy"], monoCam.fy);
 	inipp::extract(conf.sections["Camera"]["cx"], monoCam.cx);
 	inipp::extract(conf.sections["Camera"]["cy"], monoCam.cy);
+	inipp::extract(conf.sections["Camera"]["image_rescale"], imageRescale);
 	auto img0 = imageBag->at<sensor_msgs::Image>(0);
 	monoCam.width = img0->width;
 	monoCam.height = img0->height;
+	monoCam = monoCam*imageRescale;
+
+	// Transformation from lidar to camera
+	Vector3d tt, rpy;
+	inipp::extract(conf.sections["Lidar to Camera"]["x"], tt.x());
+	inipp::extract(conf.sections["Lidar to Camera"]["y"], tt.y());
+	inipp::extract(conf.sections["Lidar to Camera"]["z"], tt.z());
+	inipp::extract(conf.sections["Lidar to Camera"]["roll"], rpy.x());
+	inipp::extract(conf.sections["Lidar to Camera"]["pitch"], rpy.y());
+	inipp::extract(conf.sections["Lidar to Camera"]["yaw"], rpy.z());
+	lidarToCamera = TTransform::from_XYZ_RPY(tt, rpy.x(), rpy.y(), rpy.z());
 
 	visMap->addCameraParameter(monoCam);
 
@@ -65,8 +78,18 @@ bool
 VMapBuilder::feed(pcl::PointCloud<pcl::PointXYZI>::ConstPtr scan, const ptime &tstamp)
 {
 	auto image = getImage(tstamp);
-	if (hasStarted==false) {
 
+	if (initialized==false) {
+
+		// We have no keyframe yet
+		if (pivot==numeric_limits<kfid>::max()) {
+
+		}
+
+		else {
+
+			initialized = true;
+		}
 	}
 
 	else {

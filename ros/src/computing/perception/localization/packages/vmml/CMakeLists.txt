@@ -215,6 +215,7 @@ add_executable(
 		src/bin/lidar_mapper/PoseGraph.cpp
 		src/bin/lidar_mapper/ScanFrame.cpp
 		src/bin/lidar_mapper/VMapBuilder.cpp
+		src/bin/lidar_mapper/ImageLidarFrame.cpp
 		src/bin/lidar_mapper/TrajectoryWithCovariance.cpp
 )
 

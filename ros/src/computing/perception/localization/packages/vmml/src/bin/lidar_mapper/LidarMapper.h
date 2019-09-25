@@ -36,7 +36,6 @@
 #include "datasets/LidarScanBag2.h"
 
 #include "ScanFrame.h"
-#include "VMapBuilder.h"
 
 
 namespace LidarMapper {
@@ -49,6 +48,7 @@ const std::string
 
 
 class LidarMapper;
+class VMapBuilder;
 
 
 struct InputOffsetPosition {

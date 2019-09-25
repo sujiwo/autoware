@@ -12,6 +12,7 @@
 #include <csignal>
 
 #include "LidarMapper.h"
+#include "VMapBuilder.h"
 
 
 using namespace std;
@@ -235,6 +236,9 @@ LidarMapper::doScan(std::function<void(int64)> callback)
 
 		thread local ([&, this] {
 			localMapperProc->feed(currentScan4, messageTime, bagId);
+
+			if (localMapperProc->scanResults[bagId].hasScanFrame==true)
+				visualMapperProc->feed(currentScan4, messageTime);
 		});
 
 		thread global ([&, this] {
