@@ -34,7 +34,7 @@
   <!-- Use depend as a shortcut for packages that are both build and exec dependencies -->
   <depend>roscpp</depend>
   <depend>libg2o</depend>
-  <depend>offline_tools</depend>
+  <depend>rosbag_viewer</depend>
   
   <buildtool_depend>catkin</buildtool_depend>
 

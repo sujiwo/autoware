@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>offline_tools</name>
+  <name>rosbag_viewer</name>
   <version>0.0.1</version>
 
   <description>Tools, libraries and plugins to work offline (ie. directly from ROS bag files)</description>
@@ -12,7 +12,6 @@
   <depend>rviz</depend>
   
   <depend>roscpp</depend>
-  <depend>vector_map</depend>
   <depend>rosbag_storage</depend>
 
   <buildtool_depend>catkin</buildtool_depend>

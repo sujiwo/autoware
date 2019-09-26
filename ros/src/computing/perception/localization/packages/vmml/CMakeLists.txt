@@ -24,7 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
 	rosbag_storage
 	
 	# For RandomAccessBag
-	offline_tools
+	rosbag_viewer
 	
 	# Test offline GNSS localization
 	nmea_msgs
@@ -59,7 +59,7 @@ endif()
 
 catkin_package(
 	LIBRARIES vmml
-	CATKIN_DEPENDS roscpp libg2o offline_tools
+	CATKIN_DEPENDS roscpp libg2o rosbag_viewer
 )
 
 ###########
@@ -83,7 +83,7 @@ include_directories(
 	${LIBEDIT_INCLUDE_DIRS}
 	
 	# Special treatment to include ImageRatioEqualViewer.h
-	${offline_tools_SOURCE_PREFIX}
+	${rosbag_viewer_SOURCE_PREFIX}
 )
 
 
@@ -141,8 +141,8 @@ add_executable(dataset_browser
 	src/bin/dataset_browser/DatasetBrowser.cpp	
 	src/bin/dataset_browser/dataset_browser.ui
 # Headers of a derived QWidget must be included in order to be processed by MOC & UIC
-	${offline_tools_SOURCE_PREFIX}/bag_viewer/ImageRatioEqualViewer.cpp
-	${offline_tools_SOURCE_PREFIX}/bag_viewer/ImageRatioEqualViewer.h
+	${rosbag_viewer_SOURCE_PREFIX}/bag_viewer/ImageRatioEqualViewer.cpp
+	${rosbag_viewer_SOURCE_PREFIX}/bag_viewer/ImageRatioEqualViewer.h
 )
 
 target_include_directories(dataset_browser
