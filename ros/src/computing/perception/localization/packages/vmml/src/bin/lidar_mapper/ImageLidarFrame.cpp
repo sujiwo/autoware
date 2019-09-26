@@ -79,8 +79,14 @@ ImageLidarFrame::buildFeaturePairs(const TTransform &lidarToCameraTransform)
 	}
 	flannel.setInputCloud(cloudProjs);
 
+	vector<int> index1(1);
+	vector<float> dist1(1);
 	for (auto &kp: fKeypoints) {
 		// Unfinished
+		pcl::PointXY pt{pt.x, pt.y};
+		if (flannel.nearestKSearch(pt, 1, index1, dist1) > 0) {
+
+		}
 	}
 }
 
