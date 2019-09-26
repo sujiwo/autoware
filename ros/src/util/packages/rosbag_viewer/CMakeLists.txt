@@ -44,20 +44,20 @@ link_directories(
 	${catkin_LIBRARY_DIRS})
 
 
-add_library(
-	rviz_offline_display
-		rviz_plugins/PCDFileDisplay.cpp
-		rviz_plugins/CSVTrajectory.cpp
-		rviz_plugins/FileProperty.cpp
-)
+#add_library(
+#	rviz_offline_display
+#		rviz_plugins/PCDFileDisplay.cpp
+#		rviz_plugins/CSVTrajectory.cpp
+#		rviz_plugins/FileProperty.cpp
+#)
 
-target_link_libraries(
-	rviz_offline_display
-		Qt5::Core
-		Qt5::Widgets
-		${catkin_LIBRARIES}
-		${PCL_LIBRARIES}
-)
+#target_link_libraries(
+#	rviz_offline_display
+#		Qt5::Core
+#		Qt5::Widgets
+#		${catkin_LIBRARIES}
+#		${PCL_LIBRARIES}
+#)
 
 add_library(
 	random_access_bag
