@@ -225,6 +225,9 @@ public:
 	int width() const;
 	int height() const;
 
+	bool hasPose() const
+	{ return poseIsValid; }
+
 protected:
 	cv::Mat image;
 
@@ -233,6 +236,7 @@ protected:
 	 * with X->left, Y->bottom, Z->front
 	 */
 	Pose mPose = Pose::Identity();
+	bool poseIsValid = true;
 
 	CameraPinholeParams cameraParam;
 

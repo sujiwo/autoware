@@ -165,6 +165,10 @@ Matcher::isKeypointInEpipolarLine (const Line2 &epl2, const Eigen::Vector2d &kp2
 }
 
 
+/*
+ * This function matches features from two images using
+ * epipolar geometry
+ */
 void
 Matcher::matchAny(
 	const BaseFrame &Fr1,

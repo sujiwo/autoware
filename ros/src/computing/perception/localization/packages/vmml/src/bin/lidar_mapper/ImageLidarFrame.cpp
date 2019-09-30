@@ -84,6 +84,8 @@ ImageLidarFrame::buildFeaturePairs(const TTransform &lidarToCameraTransform)
 	for (auto &kp: fKeypoints) {
 		// Unfinished
 		pcl::PointXY pt{pt.x, pt.y};
+		index1.clear();
+		dist1.clear();
 		if (flannel.nearestKSearch(pt, 1, index1, dist1) > 0) {
 
 		}
