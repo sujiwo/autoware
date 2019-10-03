@@ -987,6 +987,20 @@ private:
 		Twist tLidar(TL12, toSeconds(meFrame2->getTimestamp() - meFrame1->getTimestamp()));
 
 		/*
+		 * ! Debug feature->lidar association
+		 */
+		auto &lidarScan1 = *meFrame1->getLidarScan();
+		pcl::PointCloud<pcl::PointXYZ> assocs;
+		map<uint32_t,uint32_t> imgToLidar;
+		Frame1->associateToLidarScans(lidarScan1, defaultLidarToCameraTransform, imgToLidar, &assocs);
+		auto lidarProjs = Frame1->projectLidarScan(assocs, defaultLidarToCameraTransform);
+		auto imageAssocs = Frame1->getImage().clone();
+		for (auto &pt: lidarProjs) {
+			cv::Point2f p2f (pt.x, pt.y);
+			cv::circle(imageAssocs, p2f, 2, cv::Scalar(255,0,0));
+		}
+
+		/*
 		 * Statistics
 		 */
 		debug("Camera transformation by E: ");

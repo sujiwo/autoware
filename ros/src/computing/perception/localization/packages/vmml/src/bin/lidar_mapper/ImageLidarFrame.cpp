@@ -66,6 +66,9 @@ ImageLidarFrame::create(
 }
 
 
+/*
+ * Associate image features with depth from Lidar
+ */
 void
 ImageLidarFrame::buildFeaturePairs(const TTransform &lidarToCameraTransform)
 {

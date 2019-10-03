@@ -7,6 +7,7 @@
 
 
 #include <pcl/filters/frustum_culling.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <exception>
 #include "BaseFrame.h"
 #include "MapPoint.h"
@@ -155,6 +156,7 @@ BaseFrame::perturb (PerturbationMode mode,
 }
 
 
+/*
 std::vector<BaseFrame::PointXYI>
 BaseFrame::projectLidarScan
 (pcl::PointCloud<pcl::PointXYZ>::ConstPtr lidarScan, const TTransform &lidarToCameraTransform, const CameraPinholeParams &cameraParams)
@@ -183,6 +185,7 @@ BaseFrame::projectLidarScan
 
 	return projections;
 }
+*/
 
 
 g2o::SBACam
@@ -405,4 +408,51 @@ BaseFrame::toSE3Quat() const
 {
 	auto extMat = createExternalParamMatrix4(mPose);
 	return g2o::SE3Quat(extMat.block<3,3>(0,0), extMat.block<3,1>(0,3));
+}
+
+
+/*
+ * Associate image features with depth from Lidar
+ */
+void BaseFrame::associateToLidarScans
+	(const pcl::PointCloud<pcl::PointXYZ> &lidarScan,
+	const TTransform &lidarToCameraTransform,
+	std::map<uint32_t, uint32_t> imageFeaturesToLidar,
+	pcl::PointCloud<pcl::PointXYZ> *associationResult)
+const
+{
+	auto lidarProjections = BaseFrame::projectLidarScan(lidarScan, lidarToCameraTransform, cameraParam);
+	pcl::KdTreeFLANN<pcl::PointXY> flannel;
+
+	pcl::PointCloud<pcl::PointXY>::Ptr cloudProjs(new pcl::PointCloud<pcl::PointXY>);
+	cloudProjs->reserve(lidarProjections.size());
+	for (auto &pt: lidarProjections) {
+		cloudProjs->push_back(pcl::PointXY{pt.x, pt.y});
+	}
+	flannel.setInputCloud(cloudProjs);
+
+#define _CoC_ 0.58
+
+	vector<int> index1(3);
+	vector<float> dist1(3);
+	for (uint32_t ix=0; ix<fKeypoints.size(); ++ix) {
+		auto &kp = fKeypoints[ix];
+		// Unfinished
+		pcl::PointXY pt{pt.x, pt.y};
+		index1.clear();
+		dist1.clear();
+		if (flannel.nearestKSearch(pt, 3, index1, dist1) > 0) {
+			for (int x=0; x<index1.size(); x++) {
+				if (dist1[x] > 2*_CoC_)
+					return;
+				else {
+					imageFeaturesToLidar.insert(make_pair(ix, index1[x]));
+					if (associationResult != NULL) {
+						associationResult->push_back(lidarScan[index1[x]]);
+					}
+				}
+			}
+		}
+	}
+
 }

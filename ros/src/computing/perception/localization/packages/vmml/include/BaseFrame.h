@@ -197,11 +197,13 @@ public:
 	};
 
 
+/*
 	static std::vector<PointXYI>
 	projectLidarScan
 	(pcl::PointCloud<pcl::PointXYZ>::ConstPtr lidarScan,
 	const TTransform &lidarToCameraTransform,
 	const CameraPinholeParams &cameraParams);
+*/
 
 	template<class PointT>
 	static std::vector<PointXYI>
@@ -209,6 +211,14 @@ public:
 	(const pcl::PointCloud<PointT> &lidarScan,
 	const TTransform &lidarToCameraTransform,
 	const CameraPinholeParams &cameraParams);
+
+	template<class PointT>
+	std::vector<PointXYI>
+	projectLidarScan
+		(const pcl::PointCloud<PointT> &lidarScan,
+		const TTransform &lidarToCameraTransform)
+	const
+	{ return projectLidarScan(lidarScan, lidarToCameraTransform, cameraParam); }
 
 	g2o::SBACam forG2O () const;
 	g2o::Sim3 toSim3() const;
@@ -227,6 +237,16 @@ public:
 
 	bool hasPose() const
 	{ return poseIsValid; }
+
+	/*
+	 * Associate image features with depth from Lidar
+	 */
+	void associateToLidarScans
+		(const pcl::PointCloud<pcl::PointXYZ> &lidarScan,
+		const TTransform &lidarToCameraTransform,
+		std::map<uint32_t, uint32_t> imageFeaturesToLidar,
+		pcl::PointCloud<pcl::PointXYZ> *associationResult=NULL)
+	const;
 
 protected:
 	cv::Mat image;
@@ -284,5 +304,18 @@ BaseFrame::projectLidarScan
 
 	return projections;
 }
+
+
+/*
+template<class PointT>
+std::vector<BaseFrame::PointXYI>
+BaseFrame::projectLidarScan
+	(const pcl::PointCloud<PointT> &lidarScan,
+	const TTransform &lidarToCameraTransform)
+const
+{
+
+}
+*/
 
 #endif /* _BASEFRAME_H_ */
