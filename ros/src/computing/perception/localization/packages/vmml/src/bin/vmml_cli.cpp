@@ -686,18 +686,34 @@ private:
 	{
 		dataItemId requestId = static_cast<dataItemId>(std::stoi(sid));
 
-		auto md = loadedDataset->get(requestId);
-		cv::Mat img = md->getImage().clone();
+		auto Frame = loadedDataset->getAsFrame(requestId);
+		auto meFrame = meidaiDsPtr->getNative(requestId);
 
-		if (mask.empty()==false) {
+		MapBuilder2 mpBuilder;
+		Frame->computeFeatures(mpBuilder.getMap()->getFeatureDetector(), loadedDataset->getMask());
+
+		/*
+		 * ! Debug feature->lidar association
+		 */
+		auto &lidarScan1 = *meFrame->getLidarScan();
+		pcl::PointCloud<pcl::PointXYZ> assocs;
+		map<uint32_t,uint32_t> imgToLidar;
+		Frame->associateToLidarScans(lidarScan1, defaultLidarToCameraTransform, imgToLidar, &assocs);
+		auto lidarProjs = Frame->projectLidarScan(assocs, defaultLidarToCameraTransform);
+		auto imageAssocs = Frame->getImage().clone();
+		for (auto &pt: lidarProjs) {
+			cv::Point2f p2f (pt.x, pt.y);
+			cv::circle(imageAssocs, p2f, 2, cv::Scalar(255,0,0));
+		}
+		cout << "Found " << imgToLidar.size() << " associations\n";
+
+		for (auto &fpair: imgToLidar) {
 
 		}
-		else {
 
-		}
-
-		cv::imwrite(dumpImagePath, img);
-		debug("Image #" + sid + " dumped to " + dumpImagePath);
+		string fImagePath = "frame"+sid+".jpg";
+		cv::imwrite(fImagePath, Frame->getImage());
+		return;
 	}
 
 	void debug(const string &s, double is_error=false)
@@ -985,20 +1001,6 @@ private:
 		TTransform TL12 = Matcher::matchLidarScans(*meFrame1, *meFrame2);
 		// Twist by Lidar
 		Twist tLidar(TL12, toSeconds(meFrame2->getTimestamp() - meFrame1->getTimestamp()));
-
-		/*
-		 * ! Debug feature->lidar association
-		 */
-		auto &lidarScan1 = *meFrame1->getLidarScan();
-		pcl::PointCloud<pcl::PointXYZ> assocs;
-		map<uint32_t,uint32_t> imgToLidar;
-		Frame1->associateToLidarScans(lidarScan1, defaultLidarToCameraTransform, imgToLidar, &assocs);
-		auto lidarProjs = Frame1->projectLidarScan(assocs, defaultLidarToCameraTransform);
-		auto imageAssocs = Frame1->getImage().clone();
-		for (auto &pt: lidarProjs) {
-			cv::Point2f p2f (pt.x, pt.y);
-			cv::circle(imageAssocs, p2f, 2, cv::Scalar(255,0,0));
-		}
 
 		/*
 		 * Statistics

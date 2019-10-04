@@ -421,6 +421,7 @@ void BaseFrame::associateToLidarScans
 	pcl::PointCloud<pcl::PointXYZ> *associationResult)
 const
 {
+	// XXX: Need to create versions that detect invalid projection
 	auto lidarProjections = BaseFrame::projectLidarScan(lidarScan, lidarToCameraTransform, cameraParam);
 	pcl::KdTreeFLANN<pcl::PointXY> flannel;
 
@@ -438,7 +439,7 @@ const
 	for (uint32_t ix=0; ix<fKeypoints.size(); ++ix) {
 		auto &kp = fKeypoints[ix];
 		// Unfinished
-		pcl::PointXY pt{pt.x, pt.y};
+		pcl::PointXY pt{kp.pt.x, kp.pt.y};
 		index1.clear();
 		dist1.clear();
 		if (flannel.nearestKSearch(pt, 3, index1, dist1) > 0) {
